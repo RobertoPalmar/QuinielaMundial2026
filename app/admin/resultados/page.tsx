@@ -1,5 +1,6 @@
 import Link from "next/link";
 import ResultCard from "@/components/ResultCard";
+import CollapsibleRound from "@/components/CollapsibleRound";
 import { SyncButton } from "../SyncButton";
 import { createClient } from "@/lib/supabase/server";
 import { teamCode } from "@/lib/flags";
@@ -32,29 +33,31 @@ export default async function AdminResultadosPage() {
         Los marcadores llegan desde football-data.org. Confirma el resultado oficial para que sume puntos.
       </p>
 
-      {((rounds ?? []) as Round[]).map((r) => {
-        const ms = byRound.get(r.id) ?? [];
-        if (ms.length === 0) return null;
-        return (
-          <section key={r.id} className="flex flex-col gap-3">
-            <div className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">{r.name}</div>
-            {ms.map((m) => (
-              <ResultCard
-                key={m.id}
-                matchId={m.id}
-                home={{ code: teamCode(m.home_team), name: m.home_team }}
-                away={{ code: teamCode(m.away_team), name: m.away_team }}
-                homeScore={m.home_score}
-                awayScore={m.away_score}
-                winnerName={m.winner}
-                apiStatus={m.api_status}
-                syncedAt={m.last_synced_at}
-                approved={m.is_approved}
-              />
-            ))}
-          </section>
-        );
-      })}
+      <div className="flex flex-col gap-3.5">
+        {((rounds ?? []) as Round[]).map((r) => {
+          const ms = byRound.get(r.id) ?? [];
+          if (ms.length === 0) return null;
+          return (
+            <CollapsibleRound key={r.id} name={r.name} slug={r.slug} defaultOpen={r.is_open}>
+              {ms.map((m) => (
+                <ResultCard
+                  key={m.id}
+                  matchId={m.id}
+                  home={{ code: teamCode(m.home_team), name: m.home_team }}
+                  away={{ code: teamCode(m.away_team), name: m.away_team }}
+                  homeScore={m.home_score}
+                  awayScore={m.away_score}
+                  winnerName={m.winner}
+                  apiStatus={m.api_status}
+                  syncedAt={m.last_synced_at}
+                  approved={m.is_approved}
+                  roundSlug={r.slug}
+                />
+              ))}
+            </CollapsibleRound>
+          );
+        })}
+      </div>
 
       {(matches ?? []).length === 0 && (
         <div className="card p-8 text-center text-muted">

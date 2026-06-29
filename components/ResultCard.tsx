@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import Flag from "@/components/Flag";
 import { teamES } from "@/lib/flags";
 import { approveResult, unapproveResult, type AdminState } from "@/app/admin/actions";
+import type { RoundSlug } from "@/lib/types";
 
 const apiClass: Record<string, string> = {
   FINISHED: "bg-muted/15 text-muted",
@@ -29,6 +30,7 @@ export default function ResultCard({
   apiStatus,
   syncedAt,
   approved,
+  roundSlug,
 }: {
   matchId: number;
   home: { code: string; name: string };
@@ -39,9 +41,40 @@ export default function ResultCard({
   apiStatus: string | null;
   syncedAt: string | null;
   approved: boolean;
+  roundSlug: RoundSlug;
 }) {
   const [state, action, pending] = useActionState<AdminState, FormData>(approveResult, {});
   const [, unapprove, unapPending] = useActionState<AdminState, FormData>(unapproveResult, {});
+
+  const groupStage = roundSlug === "grupos";
+
+  // Marcadores en estado de React -> detección de empate en vivo.
+  const [hs, setHs] = useState(homeScore != null ? String(homeScore) : "");
+  const [as, setAs] = useState(awayScore != null ? String(awayScore) : "");
+  // Ganador para empate de eliminatoria (quién avanza). Init solo si coincide con un equipo.
+  const [koWinner, setKoWinner] = useState(
+    winnerName === home.name || winnerName === away.name ? winnerName : ""
+  );
+
+  const both = hs !== "" && as !== "";
+  const nh = Number(hs);
+  const na = Number(as);
+  const isDraw = both && nh === na;
+
+  // Ganador a enviar:
+  //  - sin ambos marcadores -> "" (server deja el winner intacto)
+  //  - no empate -> equipo con más goles (auto)
+  //  - empate en grupos -> "" (resultado final, sin ganador)
+  //  - empate en eliminatoria -> equipo seleccionado en "¿quién avanza?"
+  const winnerValue = !both
+    ? ""
+    : !isDraw
+      ? nh > na
+        ? home.name
+        : away.name
+      : groupStage
+        ? ""
+        : koWinner;
 
   const status = apiStatus ?? "—";
 
@@ -68,11 +101,11 @@ export default function ResultCard({
             <span className="font-semibold text-sm truncate">{teamES(home.name)}</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <input type="number" name="home_score" min={0} max={20} defaultValue={homeScore ?? ""}
+            <input type="number" name="home_score" min={0} max={20} value={hs} onChange={(e) => setHs(e.target.value)}
               aria-label="Goles local"
               className="w-12 py-2 text-center bg-surface-2 border border-border rounded-[9px] font-display font-bold text-lg outline-none focus:border-primary" />
             <span className="font-display font-bold text-sm text-muted">:</span>
-            <input type="number" name="away_score" min={0} max={20} defaultValue={awayScore ?? ""}
+            <input type="number" name="away_score" min={0} max={20} value={as} onChange={(e) => setAs(e.target.value)}
               aria-label="Goles visitante"
               className="w-12 py-2 text-center bg-surface-2 border border-border rounded-[9px] font-display font-bold text-lg outline-none focus:border-primary" />
           </div>
@@ -82,14 +115,24 @@ export default function ResultCard({
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <span className="text-xs font-medium text-muted">Avanza:</span>
-          <select name="winner" defaultValue={winnerName ?? ""} className="input !min-h-0 flex-1 min-w-[140px] py-2.5 text-[13px]" aria-label="Quién avanza">
-            <option value="">— sin definir —</option>
-            <option value={home.name}>{teamES(home.name)}</option>
-            <option value={away.name}>{teamES(away.name)}</option>
-          </select>
-        </div>
+        {/* Ganador enviado siempre (oculto). El control visible solo lo maneja en empate de eliminatoria. */}
+        <input type="hidden" name="winner" value={winnerValue} />
+
+        {isDraw && !groupStage && (
+          <div className="flex items-center gap-2.5 flex-wrap bg-surface-2 rounded-[9px] px-3 py-2.5">
+            <span className="text-xs font-semibold">🥅 Empate · ¿quién avanza?</span>
+            <select
+              value={koWinner}
+              onChange={(e) => setKoWinner(e.target.value)}
+              className="input !min-h-0 flex-1 min-w-[140px] py-2.5 text-[13px]"
+              aria-label="Quién avanza"
+            >
+              <option value="">— sin definir —</option>
+              <option value={home.name}>{teamES(home.name)}</option>
+              <option value={away.name}>{teamES(away.name)}</option>
+            </select>
+          </div>
+        )}
 
         <div className="flex items-center gap-3 flex-wrap">
           <button type="submit" disabled={pending} className={`!min-h-0 py-2.5 text-[13px] ${approved ? "btn btn-surface" : "btn btn-primary"}`}>

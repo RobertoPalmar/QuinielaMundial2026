@@ -14,6 +14,18 @@ export default async function RankingPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // El id del perfil del usuario se resuelve por auth_user_id (profiles.id ya
+  // no es el uid de Auth). v_user_scores.user_id referencia profiles.id.
+  let myProfileId: string | null = null;
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("auth_user_id", user.id)
+      .single();
+    myProfileId = profile?.id ?? null;
+  }
+
   const { data } = await supabase
     .from("v_user_scores")
     .select("*")
@@ -25,11 +37,10 @@ export default async function RankingPage() {
   const rows: RankRow[] = scores.map((s, i) => ({
     pos: i + 1,
     name: s.username,
-    g: s.group_stage_points,
-    e: s.knockout_points,
+    a: s.hits,
     x: s.exact_hits,
     t: s.total_points,
-    you: user?.id === s.user_id,
+    you: myProfileId != null && myProfileId === s.user_id,
   }));
 
   return (

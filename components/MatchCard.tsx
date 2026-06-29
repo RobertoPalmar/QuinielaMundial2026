@@ -25,10 +25,12 @@ export default function MatchCard({ match, locked = false }: { match: Match; loc
   // Solo dígitos, positivos, máximo 2 cifras (0–99)
   const sanitize = (v: string) => v.replace(/\D/g, "").slice(0, 2);
 
+  const groupStage = match.groupStage === true;
   const both = home !== "" && away !== "";
   const nh = Number(home);
   const na = Number(away);
-  const isDraw = both && nh === na;
+  // En fase de grupos el empate es válido tal cual: no hay penales ni "quién avanza".
+  const isDraw = both && nh === na && !groupStage;
   const autoSide = both && nh !== na ? (nh > na ? "home" : "away") : null;
   const advSide = isDraw ? winner : autoSide;
   const advTeam = advSide === "home" ? match.home : advSide === "away" ? match.away : null;

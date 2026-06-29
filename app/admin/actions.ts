@@ -18,7 +18,7 @@ async function requireAdmin() {
   const { data: profile } = await supabase
     .from("profiles")
     .select("role")
-    .eq("id", user.id)
+    .eq("auth_user_id", user.id)
     .single();
   if (profile?.role !== "admin") throw new Error("No autorizado");
   return user;
@@ -45,9 +45,13 @@ export async function approveResult(
       is_approved: true,
       approved_at: new Date().toISOString(),
     };
-    if (home !== null && home !== "") patch.home_score = Number(home);
-    if (away !== null && away !== "") patch.away_score = Number(away);
-    if (winner) patch.winner = winner;
+    const hasHome = home !== null && home !== "";
+    const hasAway = away !== null && away !== "";
+    if (hasHome) patch.home_score = Number(home);
+    if (hasAway) patch.away_score = Number(away);
+    // Con ambos marcadores fijamos el ganador explícitamente (un empate de
+    // grupos lo deja en NULL). Sin ambos, no tocamos el winner sincronizado.
+    if (hasHome && hasAway) patch.winner = winner ? winner : null;
 
     const { error } = await admin
       .from("matches")
@@ -106,7 +110,15 @@ export async function updateRound(
     await requireAdmin();
     const id = Number(formData.get("round_id"));
     const isOpen = formData.get("is_open") === "on";
-    const locksAt = String(formData.get("locks_at") ?? "").trim();
+    // El cliente envía un ISO UTC ya convertido (con "Z"). new Date(iso) es
+    // idempotente para un string con offset explícito. Validamos para que un
+    // valor vacío o inválido se guarde como null en vez de "Invalid Date".
+    const locksAtRaw = String(formData.get("locks_at") ?? "").trim();
+    const locksAtDate = locksAtRaw ? new Date(locksAtRaw) : null;
+    const locksAt =
+      locksAtDate && !Number.isNaN(locksAtDate.getTime())
+        ? locksAtDate.toISOString()
+        : null;
     const exact = Number(formData.get("exact_points"));
     const winner = Number(formData.get("winner_points"));
 
@@ -115,7 +127,7 @@ export async function updateRound(
       .from("rounds")
       .update({
         is_open: isOpen,
-        locks_at: locksAt ? new Date(locksAt).toISOString() : null,
+        locks_at: locksAt,
         exact_points: Number.isInteger(exact) ? exact : 3,
         winner_points: Number.isInteger(winner) ? winner : 1,
       })

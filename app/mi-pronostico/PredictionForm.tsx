@@ -5,13 +5,16 @@ import MatchCard from "@/components/MatchCard";
 import Banner from "@/components/Banner";
 import { savePredictions, type SaveState } from "./actions";
 import type { Match } from "@/lib/data";
+import type { RoundSlug } from "@/lib/types";
 
 export function PredictionForm({
   matches,
   locked,
+  slug,
 }: {
   matches: Match[];
   locked: boolean;
+  slug: RoundSlug;
 }) {
   const [state, action, pending] = useActionState<SaveState, FormData>(savePredictions, {});
 
@@ -27,8 +30,9 @@ export function PredictionForm({
 
   return (
     <form action={action} className="flex flex-col gap-3">
+      <input type="hidden" name="round_slug" value={slug} />
       {matches.map((m) => (
-        <MatchCard key={m.id} match={m} />
+        <MatchCard key={m.id} match={m} locked={m.locked} />
       ))}
 
       {state.error && <Banner kind="error">{state.error}</Banner>}

@@ -2,23 +2,78 @@ import type { RankRow } from "@/lib/data";
 
 const medal = (pos: number) => (pos === 1 ? "🥇" : pos === 2 ? "🥈" : pos === 3 ? "🥉" : String(pos));
 
+/** Estilos por posición del podio */
+const PODIUM = {
+  1: { medal: "🥇", ring: "ring-[#facc15]", bar: "h-[120px] sm:h-[150px]", avatar: "w-[72px] h-[72px] text-2xl", glow: "shadow-[0_8px_30px_rgba(250,204,21,0.35)]", label: "1º", circle: "bg-[#facc15]", barColor: "bg-gradient-to-b from-[#facc15]/25 to-[#facc15]/5 border-[#facc15]/50" },
+  2: { medal: "🥈", ring: "ring-[#cbd5e1]", bar: "h-[88px] sm:h-[112px]", avatar: "w-[60px] h-[60px] text-xl", glow: "shadow-[0_6px_20px_rgba(148,163,184,0.3)]", label: "2º", circle: "bg-[#cbd5e1]", barColor: "bg-gradient-to-b from-[#cbd5e1]/25 to-[#cbd5e1]/5 border-[#cbd5e1]/50" },
+  3: { medal: "🥉", ring: "ring-[#d8a07a]", bar: "h-[64px] sm:h-[84px]", avatar: "w-[60px] h-[60px] text-xl", glow: "shadow-[0_6px_20px_rgba(216,160,122,0.3)]", label: "3º", circle: "bg-[#d8a07a]", barColor: "bg-gradient-to-b from-[#d8a07a]/25 to-[#d8a07a]/5 border-[#d8a07a]/50" },
+} as const;
+
+function PodiumSpot({ row }: { row: RankRow }) {
+  const s = PODIUM[row.pos as 1 | 2 | 3];
+  return (
+    <div className="flex flex-1 flex-col items-center justify-end gap-2">
+      <div className="text-2xl sm:text-3xl leading-none">{s.medal}</div>
+      <div
+        className={`grid place-items-center rounded-full font-display font-bold text-text ring-4 ${s.circle} ${s.ring} ${s.avatar} ${s.glow}`}
+      >
+        {row.name[0].toUpperCase()}
+      </div>
+      <div className="flex flex-col items-center text-center">
+        <span className="font-semibold text-sm sm:text-[15px] leading-tight text-center whitespace-normal wrap-break-word">
+          {row.name}
+          {row.you && <span className="text-muted font-medium"> · tú</span>}
+        </span>
+        <span className="font-display font-bold text-xl sm:text-2xl text-primary leading-tight">{row.t}</span>
+        <span className="text-[11px] text-muted">pts</span>
+      </div>
+      <div
+        className={`w-full rounded-t-xl ${s.barColor} border-t-2 ${s.bar} grid place-items-start justify-center pt-2`}
+      >
+        <span className="font-display font-bold text-lg sm:text-xl text-text/70">{s.label}</span>
+      </div>
+    </div>
+  );
+}
+
+function Podium({ rows }: { rows: RankRow[] }) {
+  const top3 = rows.slice(0, 3);
+  if (top3.length === 0) return null;
+
+  const first = top3.find((r) => r.pos === 1);
+  const second = top3.find((r) => r.pos === 2);
+  const third = top3.find((r) => r.pos === 3);
+
+  return (
+    <div className="card px-3 py-5 sm:px-6 sm:py-6 mb-1">
+      <div className="flex items-end justify-center gap-2 sm:gap-4 max-w-[520px] mx-auto">
+        {second && <PodiumSpot row={second} />}
+        {first && <PodiumSpot row={first} />}
+        {third && <PodiumSpot row={third} />}
+      </div>
+    </div>
+  );
+}
+
 /**
  * Ranking responsive:
  *  - md+  : tabla
  *  - móvil: tarjetas apiladas
  */
 export default function Ranking({ rows }: { rows: RankRow[] }) {
-  const cols = "grid-cols-[64px_1fr_90px_90px_90px_90px]";
+  const cols = "grid-cols-[64px_minmax(0,1fr)_90px_90px_90px]";
 
   return (
     <>
+      {/* PODIO: top 3 destacado */}
+      <Podium rows={rows} />
+
       {/* DESKTOP: tabla */}
       <div className="hidden md:block card overflow-hidden">
         <div className={`grid ${cols} px-[18px] py-3 border-b border-border text-[11px] font-semibold uppercase tracking-wide text-muted`}>
           <span>Pos</span>
           <span>Participante</span>
-          <span className="text-center">Grupos</span>
-          <span className="text-center">Elim.</span>
+          <span className="text-center">Acertados</span>
           <span className="text-center">Exactos</span>
           <span className="text-right">Total</span>
         </div>
@@ -35,8 +90,7 @@ export default function Ranking({ rows }: { rows: RankRow[] }) {
               {r.name}
               {r.you && <span className="text-muted font-medium"> · tú</span>}
             </span>
-            <span className="text-center text-sm text-muted">{r.g}</span>
-            <span className="text-center text-sm text-muted">{r.e}</span>
+            <span className="text-center text-sm text-muted">{r.a}</span>
             <span className="text-center text-sm text-muted">{r.x}</span>
             <span className="text-right font-display font-bold text-lg text-primary">{r.t}</span>
           </div>
@@ -62,9 +116,9 @@ export default function Ranking({ rows }: { rows: RankRow[] }) {
               <span className="font-display font-bold text-[22px] text-primary">{r.t}</span>
             </div>
             <div className="flex gap-4 mt-3 pt-3 border-t border-border text-xs text-muted">
-              <span>Grupos <b className="text-text">{r.g}</b></span>
-              <span>Elim. <b className="text-text">{r.e}</b></span>
+              <span>Acertados <b className="text-text">{r.a}</b></span>
               <span>Exactos <b className="text-text">{r.x}</b></span>
+              <span>Total <b className="text-text">{r.t}</b></span>
             </div>
           </div>
         ))}

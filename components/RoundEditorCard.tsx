@@ -13,9 +13,22 @@ function toLocalInput(iso: string | null): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+// valor de <input type="datetime-local"> (hora local) -> ISO UTC.
+// En el navegador, new Date("2026-06-28T20:00") interpreta el string como
+// hora local y produce el instante UTC correcto. El server lo guarda tal cual.
+function localInputToISO(local: string): string {
+  if (!local) return "";
+  const d = new Date(local);
+  return Number.isNaN(d.getTime()) ? "" : d.toISOString();
+}
+
 /** Editor de ronda (admin). */
 export default function RoundEditorCard({ round, n }: { round: Round; n: number }) {
   const [open, setOpen] = useState(round.is_open);
+  // Mantenemos el valor visible (hora local) en estado y derivamos el ISO UTC
+  // que se envía al server por un input oculto, para que la conversión ocurra
+  // en el navegador (donde se conoce la zona horaria).
+  const [localLocksAt, setLocalLocksAt] = useState(toLocalInput(round.locks_at));
   const [state, action, pending] = useActionState<AdminState, FormData>(updateRound, {});
 
   return (
@@ -45,7 +58,14 @@ export default function RoundEditorCard({ round, n }: { round: Round; n: number 
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <Field label="Cierre (deadline)">
-          <input type="datetime-local" name="locks_at" defaultValue={toLocalInput(round.locks_at)} className="input !min-h-0 py-2.5 [color-scheme:light]" />
+          {/* El input oculto lleva el ISO UTC ya convertido en el navegador. */}
+          <input type="hidden" name="locks_at" value={localInputToISO(localLocksAt)} />
+          <input
+            type="datetime-local"
+            value={localLocksAt}
+            onChange={(e) => setLocalLocksAt(e.target.value)}
+            className="input !min-h-0 py-2.5 [color-scheme:light]"
+          />
         </Field>
         <Field label="Pts marcador exacto">
           <input type="number" name="exact_points" defaultValue={round.exact_points} min={0} className="input !min-h-0 py-2.5 font-display" />

@@ -18,6 +18,16 @@ export async function savePredictions(
   } = await supabase.auth.getUser();
   if (!user) return { error: "Sesión expirada. Vuelve a ingresar." };
 
+  // El perfil del jugador se resuelve por auth_user_id (profiles.id ya no es
+  // el uid de Auth). predictions.user_id referencia profiles.id.
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("auth_user_id", user.id)
+    .single();
+  if (!profile) return { error: "No se encontró tu perfil de jugador." };
+  const profileId = profile.id;
+
   // match ids presentes en el form
   const matchIds = new Set<number>();
   for (const key of formData.keys()) {
@@ -26,18 +36,35 @@ export async function savePredictions(
   }
   if (matchIds.size === 0) return { error: "No hay partidos para guardar." };
 
-  // Equipos de cada match (para derivar el ganador por nombre)
+  // En fase de grupos un empate es válido tal cual: no hay penales ni
+  // "quién avanza". Para otras rondas, un empate exige elegir quién avanza.
+  const isGroupStage = String(formData.get("round_slug") ?? "") === "grupos";
+
+  // Equipos y kickoff de cada match (para derivar el ganador por nombre y
+  // aplicar el bloqueo por partido, igual que la RLS).
   const { data: matchRows } = await supabase
     .from("matches")
-    .select("id, home_team, away_team")
+    .select("id, home_team, away_team, kickoff_at")
     .in("id", [...matchIds]);
   const teams = new Map<number, { home: string; away: string }>();
-  for (const m of matchRows ?? [])
+  const kickoffs = new Map<number, string | null>();
+  for (const m of matchRows ?? []) {
     teams.set(m.id, { home: m.home_team, away: m.away_team });
+    kickoffs.set(m.id, m.kickoff_at);
+  }
+
+  // Bloqueo por partido: si el kickoff de ESTE partido ya pasó, el partido
+  // está cerrado aunque la ronda siga abierta. Lo omitimos (sin contarlo como
+  // error) para que la RLS no rechace el upsert.
+  const now = Date.now();
 
   const rows = [];
   let incomplete = 0;
   for (const id of matchIds) {
+    // Partido ya cerrado por kickoff: se omite (no es error). Espeja la RLS.
+    const ko = kickoffs.get(id);
+    if (ko != null && new Date(ko).getTime() <= now) continue;
+
     const home = formData.get(`m_${id}_home`);
     const away = formData.get(`m_${id}_away`);
     if (home === null || away === null || home === "" || away === "") {
@@ -55,7 +82,11 @@ export async function savePredictions(
     let pred_winner: string | null = null;
     if (ph > pa) pred_winner = t.home;
     else if (pa > ph) pred_winner = t.away;
-    else {
+    else if (isGroupStage) {
+      // fase de grupos: el empate es un pronóstico válido (sin penales).
+      // pred_winner queda "" para satisfacer la columna NOT NULL.
+      pred_winner = "";
+    } else {
       // empate: requiere selección de penales
       const side = String(formData.get(`m_${id}_winner`) ?? "");
       if (side === "home") pred_winner = t.home;
@@ -67,7 +98,7 @@ export async function savePredictions(
     }
 
     rows.push({
-      user_id: user.id,
+      user_id: profileId,
       match_id: id,
       pred_home: ph,
       pred_away: pa,

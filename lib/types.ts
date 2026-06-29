@@ -3,6 +3,7 @@
 export type Role = "user" | "admin";
 
 export type RoundSlug =
+  | "grupos"
   | "16avos"
   | "8vos"
   | "4tos"
@@ -63,4 +64,5 @@ export interface UserScore {
   knockout_points: number;
   exact_hits: number;
   total_points: number;
+  hits: number;
 }

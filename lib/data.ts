@@ -14,16 +14,20 @@ export type Match = {
   predHome?: number;
   predAway?: number;
   predWinner?: "home" | "away"; // SOLO aplica si el pronóstico fue empate
+  // Fase de grupos: un empate es válido tal cual (sin penales / "quién avanza")
+  groupStage?: boolean;
   // Resultado oficial (si ya existe)
   resHome?: number | null;
   resAway?: number | null;
+  // Bloqueo por partido: true si la ronda cerró/no está abierta, o si el
+  // kickoff de ESTE partido ya pasó. Render read-only aunque la ronda siga activa.
+  locked?: boolean;
 };
 
 export type RankRow = {
   pos: number;
   name: string;
-  g: number; // grupos
-  e: number; // eliminatorias
+  a: number; // acertados (partidos con resultado correcto, incluye exactos)
   x: number; // exactos
   t: number; // total
   you?: boolean;
