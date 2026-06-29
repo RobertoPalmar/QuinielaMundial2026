@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { flag } from "@/lib/flags";
+import Flag from "@/components/Flag";
 import type { Match, Team } from "@/lib/data";
 
 /**
@@ -17,9 +17,12 @@ import type { Match, Team } from "@/lib/data";
  *  - m_<id>_winner ("home" | "away", solo en empate)
  */
 export default function MatchCard({ match, locked = false }: { match: Match; locked?: boolean }) {
-  const [home, setHome] = useState<string>(locked ? String(match.predHome ?? "") : String(match.predHome ?? ""));
-  const [away, setAway] = useState<string>(locked ? String(match.predAway ?? "") : String(match.predAway ?? ""));
+  const [home, setHome] = useState<string>(String(match.predHome ?? ""));
+  const [away, setAway] = useState<string>(String(match.predAway ?? ""));
   const [winner, setWinner] = useState<"home" | "away" | "">(match.predWinner ?? "");
+
+  // Solo dígitos, positivos, máximo 2 cifras (0–99)
+  const sanitize = (v: string) => v.replace(/\D/g, "").slice(0, 2);
 
   const both = home !== "" && away !== "";
   const nh = Number(home);
@@ -45,7 +48,7 @@ export default function MatchCard({ match, locked = false }: { match: Match; loc
       {/* equipos + marcador */}
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2.5">
         <div className="flex items-center gap-2.5 min-w-0">
-          <span className="text-[26px] leading-none" aria-hidden>{flag(match.home.code)}</span>
+          <Flag name={match.home.name} size={26} />
           <span className="font-semibold text-[15px] truncate">{match.home.name}</span>
         </div>
 
@@ -56,14 +59,14 @@ export default function MatchCard({ match, locked = false }: { match: Match; loc
         ) : (
           <div className="flex items-center gap-2">
             <input
-              type="number" name={`m_${match.id}_home`} min={0} max={9} inputMode="numeric"
-              value={home} onChange={(e) => setHome(e.target.value)}
+              type="text" name={`m_${match.id}_home`} inputMode="numeric" pattern="[0-9]*" maxLength={2}
+              value={home} onChange={(e) => setHome(sanitize(e.target.value))}
               aria-label={`Goles ${match.home.name}`} className="score-input"
             />
             <span className="font-display font-bold text-base text-muted">:</span>
             <input
-              type="number" name={`m_${match.id}_away`} min={0} max={9} inputMode="numeric"
-              value={away} onChange={(e) => setAway(e.target.value)}
+              type="text" name={`m_${match.id}_away`} inputMode="numeric" pattern="[0-9]*" maxLength={2}
+              value={away} onChange={(e) => setAway(sanitize(e.target.value))}
               aria-label={`Goles ${match.away.name}`} className="score-input"
             />
           </div>
@@ -71,7 +74,7 @@ export default function MatchCard({ match, locked = false }: { match: Match; loc
 
         <div className="flex items-center justify-end gap-2.5 min-w-0">
           <span className="font-semibold text-[15px] truncate text-right">{match.away.name}</span>
-          <span className="text-[26px] leading-none" aria-hidden>{flag(match.away.code)}</span>
+          <Flag name={match.away.name} size={26} />
         </div>
       </div>
 
@@ -83,7 +86,7 @@ export default function MatchCard({ match, locked = false }: { match: Match; loc
       {advTeam && !isDraw && (
         <div className="flex items-center gap-2 px-3 py-2.5 rounded-[11px] bg-surface-2 text-[13px] font-semibold">
           <span className="text-good">✓ Avanza</span>
-          <span className="text-[20px] leading-none" aria-hidden>{flag(advTeam.code)}</span>
+          <Flag name={advTeam.name} size={20} />
           <span>{advTeam.name}</span>
         </div>
       )}
@@ -126,7 +129,7 @@ function PenaltyPill({
         ${selected ? (locked ? "border-good text-good bg-good/10" : "border-primary text-primary") : "border-border text-muted"}
         ${locked ? "opacity-80 cursor-default" : "cursor-pointer hover:border-primary/60"}`}
     >
-      <span className="text-base leading-none" aria-hidden>{flag(team.code)}</span>
+      <Flag name={team.name} size={16} />
       <span>{team.code}</span>
     </button>
   );

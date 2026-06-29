@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { flag } from "@/lib/flags";
+import Flag from "@/components/Flag";
 import { approveResult, unapproveResult, type AdminState } from "@/app/admin/actions";
 
 const apiClass: Record<string, string> = {
@@ -63,7 +63,7 @@ export default function ResultCard({
 
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2.5">
           <div className="flex items-center gap-2.5 min-w-0">
-            <span className="text-2xl" aria-hidden>{flag(home.code)}</span>
+            <Flag name={home.name} size={24} />
             <span className="font-semibold text-sm truncate">{home.name}</span>
           </div>
           <div className="flex items-center gap-1.5">
@@ -77,7 +77,7 @@ export default function ResultCard({
           </div>
           <div className="flex items-center justify-end gap-2.5 min-w-0">
             <span className="font-semibold text-sm truncate text-right">{away.name}</span>
-            <span className="text-2xl" aria-hidden>{flag(away.code)}</span>
+            <Flag name={away.name} size={24} />
           </div>
         </div>
 

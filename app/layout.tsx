@@ -1,4 +1,5 @@
 import "./globals.css";
+import "flag-icons/css/flag-icons.min.css";
 import type { Metadata } from "next";
 import { Space_Grotesk } from "next/font/google";
 import Navbar from "@/components/Navbar";
