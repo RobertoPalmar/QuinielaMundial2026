@@ -8,6 +8,7 @@ export const WORLD_CUP_CODE = "WC";
 // Mapeo del "stage" de football-data al slug interno de la quiniela.
 // (Mundial 48 equipos: LAST_32 = dieciseisavos / round of 32.)
 export const ROUND_NAME_TO_SLUG: Record<string, string> = {
+  GROUP_STAGE: "grupos",
   LAST_32: "16avos",
   LAST_16: "8vos",
   QUARTER_FINALS: "4tos",

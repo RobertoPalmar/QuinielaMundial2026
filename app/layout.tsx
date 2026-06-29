@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { Space_Grotesk } from "next/font/google";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import ScrollToTop from "@/components/ScrollToTop";
 import { createClient } from "@/lib/supabase/server";
 
 const spaceGrotesk = Space_Grotesk({
@@ -34,7 +35,7 @@ export default async function RootLayout({
     const { data: profile } = await supabase
       .from("profiles")
       .select("username, role")
-      .eq("id", user.id)
+      .eq("auth_user_id", user.id)
       .single();
     username = profile?.username ?? null;
     isAdmin = profile?.role === "admin";
@@ -48,6 +49,7 @@ export default async function RootLayout({
           {children}
         </main>
         <Footer />
+        <ScrollToTop />
       </body>
     </html>
   );

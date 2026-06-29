@@ -4,7 +4,9 @@ import { useActionState } from "react";
 import Link from "next/link";
 import { signUp, type AuthState } from "@/app/(auth)/actions";
 
-export default function RegisterForm() {
+export type PlayerOption = { id: string; username: string };
+
+export default function RegisterForm({ players }: { players: PlayerOption[] }) {
   const [state, action, pending] = useActionState<AuthState, FormData>(signUp, {});
 
   if (state.message) {
@@ -31,8 +33,13 @@ export default function RegisterForm() {
       )}
 
       <label className="flex flex-col gap-1.5">
-        <span className="text-xs font-semibold text-muted">Usuario</span>
-        <input type="text" name="username" placeholder="tu_usuario" className="input" minLength={3} required />
+        <span className="text-xs font-semibold text-muted">Jugador</span>
+        <select name="profile_id" className="input" required defaultValue="">
+          <option value="" disabled>Selecciona tu nombre…</option>
+          {players.map((p) => (
+            <option key={p.id} value={p.id}>{p.username}</option>
+          ))}
+        </select>
       </label>
       <label className="flex flex-col gap-1.5">
         <span className="text-xs font-semibold text-muted">Email</span>

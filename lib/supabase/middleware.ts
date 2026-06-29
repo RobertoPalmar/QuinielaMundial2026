@@ -55,7 +55,7 @@ export async function updateSession(request: NextRequest) {
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")
-      .eq("id", user.id)
+      .eq("auth_user_id", user.id)
       .single();
     if (profile?.role !== "admin") {
       const url = request.nextUrl.clone();

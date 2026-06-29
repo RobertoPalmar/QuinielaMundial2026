@@ -2,6 +2,10 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -30,13 +34,28 @@ export async function signUp(
 ): Promise<AuthState> {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
-  const username = String(formData.get("username") ?? "").trim();
+  const profileId = String(formData.get("profile_id") ?? "").trim();
 
-  if (username.length < 3) {
-    return { error: "El usuario debe tener al menos 3 caracteres." };
+  if (!UUID_RE.test(profileId)) {
+    return { error: "Selecciona un jugador de la lista." };
   }
   if (password.length < 6) {
     return { error: "La contraseña debe tener al menos 6 caracteres." };
+  }
+
+  // El perfil elegido debe seguir sin reclamar. Lo verificamos con el admin
+  // client (saltea RLS) para dar un error claro si ya fue tomado.
+  const admin = createAdminClient();
+  const { data: chosen } = await admin
+    .from("profiles")
+    .select("id, auth_user_id")
+    .eq("id", profileId)
+    .single();
+  if (!chosen) {
+    return { error: "Ese jugador no existe." };
+  }
+  if (chosen.auth_user_id) {
+    return { error: "Ese jugador ya fue reclamado por otra cuenta." };
   }
 
   const supabase = await createClient();
@@ -44,7 +63,7 @@ export async function signUp(
     email,
     password,
     options: {
-      data: { username },
+      data: { claim_profile_id: profileId },
       emailRedirectTo: `${SITE_URL}/auth/callback`,
     },
   });
