@@ -16,9 +16,11 @@ Next.js + Supabase + Resend + API-Football, desplegable en Vercel.
 
 ## Stack y flujo de datos
 
-- **API-Football** trae fixtures y marcadores en vivo. Un **cron de Vercel**
-  (`/api/cron/sync-matches`, cada 10 min) hace upsert en `matches` SIN tocar la
-  aprobación. El admin **confirma el resultado oficial** → recalcula el ranking.
+- **football-data.org** trae fixtures y marcadores. Un **cron de Vercel**
+  (`/api/cron/sync-matches`, diario en plan Hobby) hace upsert en `matches` SIN
+  tocar la aprobación. Para actualizar al momento, el admin usa el botón
+  **"🔄 Actualizar partidos"** en Admin → Resultados. El admin **confirma el
+  resultado oficial** → recalcula el ranking.
 - **Scoring**: vista `v_user_scores`. Marcador exacto = 3 pts; solo equipo que
   avanza = 1 pt. Solo cuentan partidos con `is_approved = true`.
 
