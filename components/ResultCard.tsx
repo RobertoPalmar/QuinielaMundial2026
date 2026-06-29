@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import Flag from "@/components/Flag";
+import { teamES } from "@/lib/flags";
 import { approveResult, unapproveResult, type AdminState } from "@/app/admin/actions";
 
 const apiClass: Record<string, string> = {
@@ -64,7 +65,7 @@ export default function ResultCard({
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2.5">
           <div className="flex items-center gap-2.5 min-w-0">
             <Flag name={home.name} size={24} />
-            <span className="font-semibold text-sm truncate">{home.name}</span>
+            <span className="font-semibold text-sm truncate">{teamES(home.name)}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <input type="number" name="home_score" min={0} max={20} defaultValue={homeScore ?? ""}
@@ -76,7 +77,7 @@ export default function ResultCard({
               className="w-12 py-2 text-center bg-surface-2 border border-border rounded-[9px] font-display font-bold text-lg outline-none focus:border-primary" />
           </div>
           <div className="flex items-center justify-end gap-2.5 min-w-0">
-            <span className="font-semibold text-sm truncate text-right">{away.name}</span>
+            <span className="font-semibold text-sm truncate text-right">{teamES(away.name)}</span>
             <Flag name={away.name} size={24} />
           </div>
         </div>
@@ -85,8 +86,8 @@ export default function ResultCard({
           <span className="text-xs font-medium text-muted">Avanza:</span>
           <select name="winner" defaultValue={winnerName ?? ""} className="input !min-h-0 flex-1 min-w-[140px] py-2.5 text-[13px]" aria-label="Quién avanza">
             <option value="">— sin definir —</option>
-            <option value={home.name}>{home.name}</option>
-            <option value={away.name}>{away.name}</option>
+            <option value={home.name}>{teamES(home.name)}</option>
+            <option value={away.name}>{teamES(away.name)}</option>
           </select>
         </div>
 

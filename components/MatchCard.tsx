@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Flag from "@/components/Flag";
+import { teamES } from "@/lib/flags";
 import type { Match, Team } from "@/lib/data";
 
 /**
@@ -49,7 +50,7 @@ export default function MatchCard({ match, locked = false }: { match: Match; loc
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2.5">
         <div className="flex items-center gap-2.5 min-w-0">
           <Flag name={match.home.name} size={26} />
-          <span className="font-semibold text-[15px] truncate">{match.home.name}</span>
+          <span className="font-semibold text-[15px] truncate">{teamES(match.home.name)}</span>
         </div>
 
         {locked ? (
@@ -73,7 +74,7 @@ export default function MatchCard({ match, locked = false }: { match: Match; loc
         )}
 
         <div className="flex items-center justify-end gap-2.5 min-w-0">
-          <span className="font-semibold text-[15px] truncate text-right">{match.away.name}</span>
+          <span className="font-semibold text-[15px] truncate text-right">{teamES(match.away.name)}</span>
           <Flag name={match.away.name} size={26} />
         </div>
       </div>
@@ -87,7 +88,7 @@ export default function MatchCard({ match, locked = false }: { match: Match; loc
         <div className="flex items-center gap-2 px-3 py-2.5 rounded-[11px] bg-surface-2 text-[13px] font-semibold">
           <span className="text-good">✓ Avanza</span>
           <Flag name={advTeam.name} size={20} />
-          <span>{advTeam.name}</span>
+          <span>{teamES(advTeam.name)}</span>
         </div>
       )}
 

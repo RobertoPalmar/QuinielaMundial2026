@@ -46,6 +46,37 @@ export const NAME_TO_CODE: Record<string, string> = {
   "New Caledonia": "NCL",
 };
 
+// Nombre en inglés (como lo da la API) -> nombre en español (solo display)
+export const NAME_ES: Record<string, string> = {
+  Argentina: "Argentina", Australia: "Australia", Austria: "Austria",
+  Belgium: "Bélgica", Bolivia: "Bolivia", Brazil: "Brasil",
+  Cameroon: "Camerún", Canada: "Canadá", Chile: "Chile", Colombia: "Colombia",
+  "Costa Rica": "Costa Rica", Croatia: "Croacia", Denmark: "Dinamarca",
+  Ecuador: "Ecuador", Egypt: "Egipto", England: "Inglaterra", France: "Francia",
+  Germany: "Alemania", Ghana: "Ghana", Iran: "Irán", "IR Iran": "Irán",
+  "Ivory Coast": "Costa de Marfil", "Côte d'Ivoire": "Costa de Marfil",
+  Italy: "Italia", Jamaica: "Jamaica", Japan: "Japón",
+  "South Korea": "Corea del Sur", "Korea Republic": "Corea del Sur",
+  Mali: "Malí", Mexico: "México", Morocco: "Marruecos", Netherlands: "Países Bajos",
+  "New Zealand": "Nueva Zelanda", Nigeria: "Nigeria", Norway: "Noruega",
+  Panama: "Panamá", Paraguay: "Paraguay", Peru: "Perú", Poland: "Polonia",
+  Portugal: "Portugal", Qatar: "Catar", "Saudi Arabia": "Arabia Saudita",
+  Senegal: "Senegal", Serbia: "Serbia", "South Africa": "Sudáfrica",
+  Spain: "España", Sweden: "Suecia", Switzerland: "Suiza", Tunisia: "Túnez",
+  Turkey: "Turquía", "Türkiye": "Turquía", Ukraine: "Ucrania", Uruguay: "Uruguay",
+  "United States": "Estados Unidos", USA: "Estados Unidos", Uzbekistan: "Uzbekistán",
+  Venezuela: "Venezuela", Wales: "Gales", Scotland: "Escocia", Algeria: "Argelia",
+  "DR Congo": "RD Congo", Jordan: "Jordania", "Cape Verde": "Cabo Verde",
+  "Cabo Verde": "Cabo Verde", Curacao: "Curazao", "Curaçao": "Curazao",
+  Haiti: "Haití", "New Caledonia": "Nueva Caledonia", Greece: "Grecia",
+  Romania: "Rumania", "Por definir": "Por definir",
+};
+
+// Nombre para mostrar en español. Fallback: el mismo nombre.
+export function teamES(name: string): string {
+  return NAME_ES[name] ?? name;
+}
+
 // Etiqueta corta (3 letras). Fallback: primeras 3 letras del nombre.
 export function teamCode(name: string): string {
   return NAME_TO_CODE[name] ?? name.slice(0, 3).toUpperCase();
