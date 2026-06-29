@@ -21,9 +21,12 @@ export const NAME_TO_ISO2: Record<string, string> = {
   Sweden: "se", Switzerland: "ch", Tunisia: "tn", Turkey: "tr",
   "Türkiye": "tr", Ukraine: "ua", Uruguay: "uy", "United States": "us",
   USA: "us", Uzbekistan: "uz", Venezuela: "ve", Wales: "gb-wls",
-  Scotland: "gb-sct", Algeria: "dz", "DR Congo": "cd", Jordan: "jo",
-  "Cape Verde": "cv", "Cabo Verde": "cv", Curacao: "cw", "Curaçao": "cw",
+  Scotland: "gb-sct", Algeria: "dz", "DR Congo": "cd", "Congo DR": "cd",
+  Jordan: "jo", "Cape Verde": "cv", "Cabo Verde": "cv",
+  "Cape Verde Islands": "cv", Curacao: "cw", "Curaçao": "cw",
   Haiti: "ht", "New Caledonia": "nc", Greece: "gr", Romania: "ro",
+  "Bosnia-Herzegovina": "ba", Czechia: "cz", "Czech Republic": "cz",
+  Iraq: "iq",
 };
 
 // Nombre -> ISO3 corto para mostrar como etiqueta (ej. pills de penales)
@@ -42,8 +45,10 @@ export const NAME_TO_CODE: Record<string, string> = {
   Switzerland: "SUI", Tunisia: "TUN", Turkey: "TUR", Ukraine: "UKR",
   Uruguay: "URU", "United States": "USA", USA: "USA", Uzbekistan: "UZB",
   Venezuela: "VEN", Wales: "WAL", Algeria: "ALG", "DR Congo": "COD",
-  Jordan: "JOR", "Cape Verde": "CPV", Curacao: "CUW", Haiti: "HAI",
-  "New Caledonia": "NCL",
+  "Congo DR": "COD", Jordan: "JOR", "Cape Verde": "CPV",
+  "Cape Verde Islands": "CPV", Curacao: "CUW", Haiti: "HAI",
+  "New Caledonia": "NCL", "Bosnia-Herzegovina": "BIH",
+  Czechia: "CZE", "Czech Republic": "CZE", Iraq: "IRQ",
 };
 
 // Nombre en inglés (como lo da la API) -> nombre en español (solo display)
@@ -66,23 +71,56 @@ export const NAME_ES: Record<string, string> = {
   Turkey: "Turquía", "Türkiye": "Turquía", Ukraine: "Ucrania", Uruguay: "Uruguay",
   "United States": "Estados Unidos", USA: "Estados Unidos", Uzbekistan: "Uzbekistán",
   Venezuela: "Venezuela", Wales: "Gales", Scotland: "Escocia", Algeria: "Argelia",
-  "DR Congo": "RD Congo", Jordan: "Jordania", "Cape Verde": "Cabo Verde",
-  "Cabo Verde": "Cabo Verde", Curacao: "Curazao", "Curaçao": "Curazao",
+  "DR Congo": "RD Congo", "Congo DR": "RD Congo", Jordan: "Jordania",
+  "Cape Verde": "Cabo Verde", "Cabo Verde": "Cabo Verde",
+  "Cape Verde Islands": "Cabo Verde", Curacao: "Curazao", "Curaçao": "Curazao",
   Haiti: "Haití", "New Caledonia": "Nueva Caledonia", Greece: "Grecia",
-  Romania: "Rumania", "Por definir": "Por definir",
+  Romania: "Rumania", "Bosnia-Herzegovina": "Bosnia y Herzegovina",
+  Czechia: "Chequia", "Czech Republic": "Chequia", Iraq: "Irak",
+  "Por definir": "Por definir",
 };
+
+// Normaliza un nombre: minúsculas, sin acentos, no-alfanuméricos a espacios.
+// Hace las búsquedas resilientes a variantes de casing/acentos/separadores.
+function normalize(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+// Versiones normalizadas de los mapas (construidas una sola vez).
+function buildNormalized(map: Record<string, string>): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const key in map) {
+    const nk = normalize(key);
+    // No sobrescribir: la primera clave (orden de inserción) gana.
+    if (!(nk in out)) out[nk] = map[key];
+  }
+  return out;
+}
+
+const NAME_TO_ISO2_N = buildNormalized(NAME_TO_ISO2);
+const NAME_TO_CODE_N = buildNormalized(NAME_TO_CODE);
+const NAME_ES_N = buildNormalized(NAME_ES);
 
 // Nombre para mostrar en español. Fallback: el mismo nombre.
 export function teamES(name: string): string {
-  return NAME_ES[name] ?? name;
+  return NAME_ES[name] ?? NAME_ES_N[normalize(name)] ?? name;
 }
 
 // Etiqueta corta (3 letras). Fallback: primeras 3 letras del nombre.
 export function teamCode(name: string): string {
-  return NAME_TO_CODE[name] ?? name.slice(0, 3).toUpperCase();
+  return (
+    NAME_TO_CODE[name] ??
+    NAME_TO_CODE_N[normalize(name)] ??
+    name.slice(0, 3).toUpperCase()
+  );
 }
 
 // Código flag-icons para la clase `fi fi-<code>`. "" si no hay match.
 export function flagCode(name: string): string {
-  return NAME_TO_ISO2[name] ?? "";
+  return NAME_TO_ISO2[name] ?? NAME_TO_ISO2_N[normalize(name)] ?? "";
 }
