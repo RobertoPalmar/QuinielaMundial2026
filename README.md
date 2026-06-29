@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Quiniela Mundial FIFA 2026 ⚽
 
-## Getting Started
+Tablero para gestionar una quiniela del Mundial 2026 (fase eliminatoria).
+Next.js + Supabase + Resend + API-Football, desplegable en Vercel.
 
-First, run the development server:
+## Secciones
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **Login / Registro** — Supabase Auth con confirmación por email (SMTP Resend).
+- **Reglas** — sistema de puntos (3 exacto / 1 ganador) y dinámica de rondas.
+- **Mi Pronóstico** — carga de predicciones de la ronda abierta; se bloquea al
+  deadline (kickoff del primer partido de la ronda).
+- **Ranking** — puntaje en vivo = grupos + eliminatorias (solo partidos
+  aprobados por el admin).
+- **Admin** (`role = 'admin'`) — aprobar resultados, abrir/cerrar rondas,
+  importar puntos de grupos.
+
+## Stack y flujo de datos
+
+- **API-Football** trae fixtures y marcadores en vivo. Un **cron de Vercel**
+  (`/api/cron/sync-matches`, cada 10 min) hace upsert en `matches` SIN tocar la
+  aprobación. El admin **confirma el resultado oficial** → recalcula el ranking.
+- **Scoring**: vista `v_user_scores`. Marcador exacto = 3 pts; solo equipo que
+  avanza = 1 pt. Solo cuentan partidos con `is_approved = true`.
+
+## Setup local
+
+1. Variables de entorno: copia `.env.example` a `.env.local` y complétalo.
+   (En este repo ya existe `.env.local` con las credenciales del proyecto.)
+2. Instala y corre:
+   ```bash
+   npm install
+   npm run dev
+   ```
+3. Aplica la migración a Supabase (ya aplicada vía Management API):
+   `supabase/migrations/0001_init.sql`.
+
+## Hacerte administrador
+
+Tras registrarte, marca tu usuario como admin en Supabase (SQL Editor):
+
+```sql
+update public.profiles set role = 'admin' where username = '<tu-usuario>';
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Pendientes / configuración externa
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **API-Football**: pega tu key en `API_FOOTBALL_KEY`. Verifica que la liga
+  World Cup (id 1, season 2026) esté disponible en tu plan; ajusta el mapeo de
+  rondas en `lib/api-football.ts` (`ROUND_NAME_TO_SLUG`) si los nombres difieren.
+- **Resend / emails**: el SMTP está configurado con sender `onboarding@resend.dev`.
+  ⚠️ Sin un **dominio verificado** en Resend, solo se entregan correos a tu
+  propio email. Para escribir a todos los participantes: verifica un dominio en
+  Resend y cambia `smtp_admin_email` (Supabase → Auth → SMTP) a `noreply@tudominio`.
+- **locks_at de 16avos**: ajusta el deadline real en Admin → Rondas (o en el seed).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Deploy en Vercel
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Sube el repo a GitHub y conéctalo a Vercel.
+2. Carga las env vars (incluye `API_FOOTBALL_KEY` y `CRON_SECRET`).
+3. Cambia `NEXT_PUBLIC_SITE_URL` y el `site_url`/allow-list de Supabase Auth a
+   la URL de producción.
+4. El cron de `vercel.json` corre automáticamente. (En plan Hobby la frecuencia
+   de crons es limitada; usa el botón "Sincronizar" del admin si hace falta.)
