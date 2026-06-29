@@ -1,16 +1,30 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import Badge from "@/components/Badge";
+import Banner from "@/components/Banner";
+import EmptyState from "@/components/EmptyState";
 import { PredictionForm } from "./PredictionForm";
+import { createClient } from "@/lib/supabase/server";
+import { teamCode } from "@/lib/flags";
+import type { Match as UIMatch } from "@/lib/data";
 import type { Match, Prediction, Round } from "@/lib/types";
 
 export const metadata = { title: "Mi Pronóstico · Quiniela Mundial 2026" };
+export const revalidate = 0;
 
-function fmt(dt: string | null) {
-  if (!dt) return "—";
+function fmtKickoff(dt: string | null): string {
+  if (!dt) return "Por definir";
   return new Date(dt).toLocaleString("es-MX", {
-    dateStyle: "medium",
-    timeStyle: "short",
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
   });
+}
+
+function fmtDeadline(dt: string | null): string {
+  if (!dt) return "Por definir";
+  return new Date(dt).toLocaleString("es-MX", { dateStyle: "medium", timeStyle: "short" });
 }
 
 export default async function MiPronosticoPage() {
@@ -18,16 +32,14 @@ export default async function MiPronosticoPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  // El middleware ya garantiza sesión, pero por seguridad:
   if (!user) {
     return (
       <p>
-        Debes <Link href="/login" className="text-[var(--color-primary)]">ingresar</Link>.
+        Debes <Link href="/login" className="text-primary font-semibold">ingresar</Link>.
       </p>
     );
   }
 
-  // Ronda abierta de menor ordinal
   const { data: rounds } = await supabase
     .from("rounds")
     .select("*")
@@ -38,18 +50,17 @@ export default async function MiPronosticoPage() {
 
   if (!round) {
     return (
-      <div className="card p-8 text-center">
-        <h1 className="text-2xl font-bold mb-2">No hay ronda abierta</h1>
-        <p className="text-[var(--color-muted)]">
-          Aún no se habilitó una ronda para cargar pronósticos. Vuelve más
-          tarde.
-        </p>
-      </div>
+      <EmptyState
+        icon="📭"
+        title="No hay ninguna ronda abierta"
+        action={<Link href="/ranking" className="btn btn-surface mt-1.5">Ver ranking</Link>}
+      >
+        Cuando el admin abra la siguiente ronda podrás cargar tus pronósticos aquí. Mientras tanto, revisa el ranking.
+      </EmptyState>
     );
   }
 
-  const locked =
-    round.locks_at != null && new Date(round.locks_at).getTime() <= Date.now();
+  const locked = round.locks_at != null && new Date(round.locks_at).getTime() <= Date.now();
 
   const { data: matchData } = await supabase
     .from("matches")
@@ -58,92 +69,60 @@ export default async function MiPronosticoPage() {
     .order("kickoff_at", { ascending: true });
   const matches = (matchData ?? []) as Match[];
 
+  if (matches.length === 0) {
+    return (
+      <EmptyState icon="⏳" title="Partidos aún no cargados">
+        La ronda está abierta, pero los partidos todavía no se sincronizaron. Vuelve en un rato.
+      </EmptyState>
+    );
+  }
+
   const { data: predData } = await supabase
     .from("predictions")
     .select("*")
     .eq("user_id", user.id)
-    .in(
-      "match_id",
-      matches.map((m) => m.id)
-    );
-  const predictions: Record<number, Prediction> = {};
-  for (const p of (predData ?? []) as Prediction[]) predictions[p.match_id] = p;
+    .in("match_id", matches.map((m) => m.id));
+  const preds = new Map<number, Prediction>();
+  for (const p of (predData ?? []) as Prediction[]) preds.set(p.match_id, p);
+
+  const uiMatches: UIMatch[] = matches.map((m) => {
+    const p = preds.get(m.id);
+    const predWinner =
+      p && p.pred_home === p.pred_away
+        ? p.pred_winner === m.home_team
+          ? ("home" as const)
+          : ("away" as const)
+        : undefined;
+    return {
+      id: m.id,
+      time: fmtKickoff(m.kickoff_at),
+      home: { code: teamCode(m.home_team), name: m.home_team },
+      away: { code: teamCode(m.away_team), name: m.away_team },
+      predHome: p?.pred_home,
+      predAway: p?.pred_away,
+      predWinner,
+      resHome: m.is_approved ? m.home_score : undefined,
+      resAway: m.is_approved ? m.away_score : undefined,
+    };
+  });
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-2">
+    <div className="flex flex-col gap-5">
+      <div className="card p-5 flex flex-wrap items-center justify-between gap-3.5">
         <div>
-          <h1 className="text-3xl font-bold">{round.name}</h1>
-          <p className="text-sm text-[var(--color-muted)]">
-            Cierra: {fmt(round.locks_at)}
-          </p>
+          <h1 className="font-display font-bold text-2xl md:text-[26px] tracking-tight">{round.name}</h1>
+          <p className="text-[13px] font-medium text-muted mt-1">Cierre: {fmtDeadline(round.locks_at)}</p>
         </div>
-        <span className={`badge ${locked ? "text-red-400" : "text-[var(--color-primary)]"}`}>
-          {locked ? "🔒 Cerrada" : "🟢 Abierta"}
-        </span>
+        {locked ? <Badge variant="closed">🔒 Cerrada</Badge> : <Badge variant="open" dot>Abierta</Badge>}
       </div>
 
-      {matches.length === 0 ? (
-        <div className="card p-8 text-center text-[var(--color-muted)]">
-          Los partidos de esta ronda todavía no están cargados. Vuelve pronto.
-        </div>
-      ) : locked ? (
-        <LockedView matches={matches} predictions={predictions} fmt={fmt} />
-      ) : (
-        <>
-          <p className="text-sm text-[var(--color-muted)]">
-            Ingresa el marcador y quién avanza. Puedes editar hasta el cierre.
-          </p>
-          <PredictionForm matches={matches} predictions={predictions} />
-        </>
+      {locked && (
+        <Banner kind="info">
+          Esta ronda está cerrada. Tus pronósticos quedaron guardados en modo solo lectura.
+        </Banner>
       )}
-    </div>
-  );
-}
 
-function LockedView({
-  matches,
-  predictions,
-  fmt,
-}: {
-  matches: Match[];
-  predictions: Record<number, Prediction>;
-  fmt: (s: string | null) => string;
-}) {
-  return (
-    <div className="space-y-3">
-      <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-2)] p-3 text-sm">
-        🔒 La ronda está cerrada. Estos son tus pronósticos registrados.
-      </div>
-      {matches.map((m) => {
-        const p = predictions[m.id];
-        return (
-          <div key={m.id} className="card p-4 flex items-center justify-between">
-            <div className="text-sm">
-              <div className="font-medium">
-                {m.home_team} vs {m.away_team}
-              </div>
-              <div className="text-[var(--color-muted)]">{fmt(m.kickoff_at)}</div>
-            </div>
-            <div className="text-right">
-              {p ? (
-                <>
-                  <div className="font-bold text-lg">
-                    {p.pred_home} - {p.pred_away}
-                  </div>
-                  <div className="text-xs text-[var(--color-muted)]">
-                    Avanza: {p.pred_winner}
-                  </div>
-                </>
-              ) : (
-                <span className="text-[var(--color-muted)] text-sm">
-                  Sin pronóstico
-                </span>
-              )}
-            </div>
-          </div>
-        );
-      })}
+      <PredictionForm matches={uiMatches} locked={locked} />
     </div>
   );
 }

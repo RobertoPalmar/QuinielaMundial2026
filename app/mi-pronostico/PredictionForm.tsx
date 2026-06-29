@@ -1,72 +1,45 @@
 "use client";
 
 import { useActionState } from "react";
+import MatchCard from "@/components/MatchCard";
+import Banner from "@/components/Banner";
 import { savePredictions, type SaveState } from "./actions";
-import type { Match, Prediction } from "@/lib/types";
+import type { Match } from "@/lib/data";
 
 export function PredictionForm({
   matches,
-  predictions,
+  locked,
 }: {
   matches: Match[];
-  predictions: Record<number, Prediction>;
+  locked: boolean;
 }) {
-  const [state, action, pending] = useActionState<SaveState, FormData>(
-    savePredictions,
-    {}
-  );
+  const [state, action, pending] = useActionState<SaveState, FormData>(savePredictions, {});
+
+  if (locked) {
+    return (
+      <div className="flex flex-col gap-3">
+        {matches.map((m) => (
+          <MatchCard key={m.id} match={m} locked />
+        ))}
+      </div>
+    );
+  }
 
   return (
-    <form action={action} className="space-y-4">
-      {matches.map((m) => {
-        const p = predictions[m.id];
-        return (
-          <div key={m.id} className="card p-4">
-            <div className="flex items-center justify-center gap-3 flex-wrap">
-              <span className="font-medium text-right min-w-[7rem]">
-                {m.home_team}
-              </span>
-              <input
-                name={`m_${m.id}_home`}
-                type="number"
-                min={0}
-                defaultValue={p?.pred_home ?? ""}
-                className="input w-16 text-center"
-              />
-              <span className="text-[var(--color-muted)]">vs</span>
-              <input
-                name={`m_${m.id}_away`}
-                type="number"
-                min={0}
-                defaultValue={p?.pred_away ?? ""}
-                className="input w-16 text-center"
-              />
-              <span className="font-medium min-w-[7rem]">{m.away_team}</span>
-            </div>
+    <form action={action} className="flex flex-col gap-3">
+      {matches.map((m) => (
+        <MatchCard key={m.id} match={m} />
+      ))}
 
-            <div className="mt-3 flex items-center justify-center gap-2 text-sm">
-              <span className="text-[var(--color-muted)]">Avanza:</span>
-              <select
-                name={`m_${m.id}_winner`}
-                defaultValue={p?.pred_winner ?? ""}
-                className="input w-auto"
-              >
-                <option value="">— elegir —</option>
-                <option value={m.home_team}>{m.home_team}</option>
-                <option value={m.away_team}>{m.away_team}</option>
-              </select>
-            </div>
-          </div>
-        );
-      })}
+      {state.error && <Banner kind="error">{state.error}</Banner>}
+      {state.message && <Banner kind="success">{state.message}</Banner>}
 
-      {state.error && <p className="text-sm text-red-400">{state.error}</p>}
-      {state.message && (
-        <p className="text-sm text-[var(--color-primary)]">{state.message}</p>
-      )}
-
-      <button className="btn btn-primary w-full" disabled={pending}>
-        {pending ? "Guardando..." : "Guardar pronósticos"}
+      <button
+        type="submit"
+        disabled={pending}
+        className="btn btn-primary sticky bottom-4 mt-1.5 min-h-[52px] text-base shadow-[var(--shadow-pop)]"
+      >
+        {pending ? "Guardando…" : "Guardar pronósticos"}
       </button>
     </form>
   );

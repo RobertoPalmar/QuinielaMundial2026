@@ -5,17 +5,9 @@ export const metadata = { title: "Importar grupos · Admin" };
 
 export default function ImportPage() {
   return (
-    <div className="space-y-6">
-      <div>
-        <Link href="/admin" className="text-sm text-[var(--color-muted)]">
-          ← Admin
-        </Link>
-        <h1 className="text-3xl font-bold">Importar puntos de grupos</h1>
-      </div>
-      <p className="text-sm text-[var(--color-muted)]">
-        Carga los totales de la fase de grupos. Se suman al ranking junto con
-        los puntos de la fase eliminatoria.
-      </p>
+    <div className="flex flex-col gap-[18px]">
+      <Link href="/admin" className="self-start text-[13px] font-semibold text-muted hover:text-text">← Volver al panel</Link>
+      <h1 className="font-display font-bold text-[clamp(24px,5vw,34px)] tracking-tight">Importar grupos</h1>
       <ImportForm />
     </div>
   );

@@ -1,87 +1,92 @@
+/* ============================================================
+   Quiniela Mundial 2026 — globals.css (Tailwind v4)
+   Tema CLARO único (azul / grises / blancos).
+   ============================================================ */
+
 @import "tailwindcss";
 
+/* --------- TOKENS (@theme → utilidades automáticas) --------- */
 @theme {
-  --color-bg: #0a0f1c;
-  --color-surface: #111a2e;
-  --color-surface-2: #18233d;
-  --color-border: #243049;
-  --color-primary: #10b981;
-  --color-primary-dark: #059669;
-  --color-accent: #f59e0b;
-  --color-text: #e8eefc;
-  --color-muted: #93a1c0;
-  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+  /* Colores */
+  --color-bg:          #eef2f8;  /* fondo app */
+  --color-surface:     #ffffff;  /* tarjetas */
+  --color-surface-2:   #eef3fb;  /* inputs, chips, hover */
+  --color-border:      #dbe3ef;
+  --color-primary:     #2563eb;  /* azul acción */
+  --color-primary-dark:#1d4ed8;  /* fin del gradiente */
+  --color-accent:      #0ea5e9;  /* azul secundario / números */
+  --color-text:        #0f1b2d;  /* texto principal */
+  --color-muted:       #5a6b85;  /* texto secundario */
+  --color-good:        #16a34a;  /* abierto / aprobado / en vivo */
+  --color-warn:        #d97706;  /* pendiente / cierre */
+  --color-bad:         #dc2626;  /* error */
+  --color-on-primary:  #ffffff;  /* texto sobre azul */
+
+  /* Tipografía (Space Grotesk via next/font → --font-space) */
+  --font-sans:    var(--font-space, "Space Grotesk"), system-ui, sans-serif;
+  --font-display: var(--font-space, "Space Grotesk"), system-ui, sans-serif;
+
+  /* Radios */
+  --radius-input: 11px;
+  --radius-md:    12px;
+  --radius-card:  16px;
+  --radius-pill:  999px;
+
+  /* Sombras (suaves, para tema claro) */
+  --shadow-sm:  0 1px 2px rgba(15, 27, 45, 0.05);
+  --shadow-pop: 0 12px 32px rgba(15, 27, 45, 0.14);
 }
 
-:root {
-  color-scheme: dark;
-}
-
-body {
-  background:
-    radial-gradient(1200px 600px at 80% -10%, rgba(16, 185, 129, 0.12), transparent),
-    radial-gradient(900px 500px at -10% 10%, rgba(245, 158, 11, 0.08), transparent),
-    var(--color-bg);
-  color: var(--color-text);
-  font-family: var(--font-sans);
-  min-height: 100dvh;
-}
-
-/* Utilidades reutilizables */
-@layer components {
-  .card {
-    background: color-mix(in srgb, var(--color-surface) 90%, transparent);
-    border: 1px solid var(--color-border);
-    border-radius: 1rem;
-    backdrop-filter: blur(6px);
-  }
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    font-weight: 600;
-    border-radius: 0.75rem;
-    padding: 0.625rem 1.1rem;
-    transition: all 0.15s ease;
-    cursor: pointer;
-  }
-  .btn-primary {
-    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
-    color: #04130d;
-  }
-  .btn-primary:hover {
-    filter: brightness(1.08);
-  }
-  .btn-ghost {
-    border: 1px solid var(--color-border);
-    color: var(--color-text);
-    background: transparent;
-  }
-  .btn-ghost:hover {
-    background: var(--color-surface-2);
-  }
-  .input {
-    width: 100%;
+/* --------- BASE --------- */
+@layer base {
+  html { color-scheme: light; }
+  body {
     background: var(--color-bg);
-    border: 1px solid var(--color-border);
-    border-radius: 0.6rem;
-    padding: 0.55rem 0.75rem;
     color: var(--color-text);
-    outline: none;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
   }
-  .input:focus {
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18);
-  }
-  .badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    font-size: 0.72rem;
-    font-weight: 600;
-    padding: 0.2rem 0.6rem;
-    border-radius: 999px;
-    border: 1px solid var(--color-border);
-  }
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  input[type="number"] { -moz-appearance: textfield; }
 }
+
+/* --------- COMPONENTES REUTILIZABLES --------- */
+@layer components {
+  .card { @apply bg-surface border border-border rounded-card; }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 min-h-[46px] px-5 rounded-md
+           font-semibold text-[15px] cursor-pointer transition
+           disabled:opacity-60 disabled:cursor-not-allowed;
+  }
+  .btn-primary { @apply text-on-primary bg-gradient-to-br from-primary to-primary-dark hover:brightness-105; }
+  .btn-ghost   { @apply text-text bg-transparent border border-border hover:bg-surface-2; }
+  .btn-surface { @apply text-text bg-surface border border-border hover:bg-surface-2; }
+
+  .input {
+    @apply w-full min-h-[46px] px-3.5 bg-surface-2 border border-border rounded-input
+           text-text text-[15px] font-medium outline-none
+           placeholder:text-muted/70 focus:border-primary focus:ring-2 focus:ring-primary/20;
+  }
+  .score-input {
+    @apply w-[52px] py-2.5 text-center bg-surface-2 border border-border rounded-[10px]
+           font-display font-bold text-xl outline-none focus:border-primary;
+  }
+
+  .badge { @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pill text-xs font-semibold; }
+  .badge-open     { @apply bg-good/15 text-good; }
+  .badge-closed   { @apply bg-surface-2 text-muted; }
+  .badge-approved { @apply bg-good/15 text-good; }
+  .badge-pending  { @apply bg-warn/15 text-warn; }
+  .badge-live     { @apply bg-good/15 text-good; }
+}
+
+/* --------- UTILIDADES --------- */
+@layer utilities {
+  .dot       { @apply inline-block w-[7px] h-[7px] rounded-full; }
+  .dot-pulse { animation: qpulse 1.6s infinite; }
+}
+
+@keyframes qpulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+@keyframes qspin  { to { transform: rotate(360deg); } }

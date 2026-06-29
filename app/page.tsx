@@ -1,52 +1,57 @@
 import Link from "next/link";
 
-export default function Home() {
+const SCORING = [
+  { n: "3", t: "Marcador exacto", d: "Aciertas el resultado exacto del partido. Ej: 2-1." },
+  { n: "1", t: "Equipo que avanza", d: "Aciertas qué selección pasa de ronda." },
+  { n: "⏱", t: "Cierre por ronda", d: "Cada ronda cierra en su fecha límite. Después no se edita." },
+];
+
+export default function HomePage() {
   return (
-    <div className="text-center py-12">
-      <div className="text-6xl mb-4">⚽🏆</div>
-      <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight">
-        Quiniela Mundial 2026
-      </h1>
-      <p className="text-[var(--color-muted)] mt-4 max-w-xl mx-auto">
-        Pronostica los partidos de la fase eliminatoria, suma puntos y compite
-        por el primer lugar del ranking.
-      </p>
+    <div className="flex flex-col gap-8">
+      {/* HERO */}
+      <section className="pt-2">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-pill border border-border bg-surface text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
+          <span aria-hidden>🇺🇸 🇲🇽 🇨🇦</span>
+          <span>World Cup 26 · Fase eliminatoria</span>
+        </div>
 
-      <div className="flex flex-wrap gap-3 justify-center mt-8">
-        <Link href="/mi-pronostico" className="btn btn-primary">
-          Cargar mi pronóstico
-        </Link>
-        <Link href="/ranking" className="btn btn-ghost">
-          Ver ranking
-        </Link>
-        <Link href="/reglas" className="btn btn-ghost">
-          Reglas
-        </Link>
-      </div>
+        <h1 className="mt-4 font-display font-bold text-[clamp(32px,7vw,56px)] leading-[1.04] tracking-tight max-w-[14ch] text-balance">
+          Tu quiniela del Mundial, <span className="text-primary">ronda por ronda.</span>
+        </h1>
+        <p className="mt-4 text-[clamp(15px,2.6vw,18px)] leading-relaxed text-muted max-w-[46ch]">
+          Carga tus pronósticos, suma puntos por marcador exacto y compite en el ranking en vivo con tus amigos.
+        </p>
 
-      <div className="grid sm:grid-cols-3 gap-4 mt-12 text-left">
-        <div className="card p-5">
-          <div className="text-2xl">🎯</div>
-          <h3 className="font-semibold mt-2">Marcador exacto: 3 pts</h3>
-          <p className="text-sm text-[var(--color-muted)] mt-1">
-            Acierta el resultado tal cual y suma el máximo.
-          </p>
+        <div className="flex flex-wrap gap-3 mt-6">
+          <Link href="/mi-pronostico" className="btn btn-primary min-h-[48px]">Cargar pronóstico →</Link>
+          <Link href="/ranking" className="btn btn-surface min-h-[48px]">Ver ranking</Link>
+          <Link href="/reglas" className="btn btn-ghost min-h-[48px]">Reglas</Link>
         </div>
-        <div className="card p-5">
-          <div className="text-2xl">✅</div>
-          <h3 className="font-semibold mt-2">Equipo que avanza: 1 pt</h3>
-          <p className="text-sm text-[var(--color-muted)] mt-1">
-            Si fallas el marcador pero aciertas quién pasa, sumas igual.
-          </p>
+      </section>
+
+      {/* SCORING */}
+      <section className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
+        {SCORING.map((c) => (
+          <div key={c.t} className="card p-[22px] flex flex-col gap-2.5">
+            <span className="font-display font-bold text-[38px] leading-none text-primary">{c.n}</span>
+            <span className="font-semibold text-base">{c.t}</span>
+            <span className="text-sm leading-relaxed text-muted">{c.d}</span>
+          </div>
+        ))}
+      </section>
+
+      {/* Teaser ronda abierta */}
+      <Link
+        href="/mi-pronostico"
+        className="flex flex-wrap items-center justify-between gap-3.5 p-5 rounded-card border border-border bg-gradient-to-r from-surface-2 to-surface"
+      >
+        <div className="flex items-center gap-3">
+          <span className="badge badge-open"><span className="dot bg-current dot-pulse" />Ronda abierta</span>
+          <span className="font-semibold text-[15px]">Dieciseisavos de final</span>
         </div>
-        <div className="card p-5">
-          <div className="text-2xl">⏱️</div>
-          <h3 className="font-semibold mt-2">Cierre por ronda</h3>
-          <p className="text-sm text-[var(--color-muted)] mt-1">
-            Carga antes del primer partido de cada ronda.
-          </p>
-        </div>
-      </div>
+        <span className="text-[13px] font-medium text-muted">Carga tu pronóstico →</span>
+      </Link>
     </div>
   );
 }

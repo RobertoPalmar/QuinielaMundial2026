@@ -1,28 +1,52 @@
-import type { Metadata } from "next";
-import { Geist } from "next/font/google";
 import "./globals.css";
-import { Navbar } from "@/components/Navbar";
+import type { Metadata } from "next";
+import { Space_Grotesk } from "next/font/google";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import { createClient } from "@/lib/supabase/server";
 
-const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-space",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Quiniela Mundial 2026",
-  description: "Tablero de la quiniela del Mundial FIFA 2026",
+  description: "Quiniela del Mundial FIFA 2026 — pronósticos, ranking y admin.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
-}: Readonly<{ children: React.ReactNode }>) {
+}: {
+  children: React.ReactNode;
+}) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  let username: string | null = null;
+  let isAdmin = false;
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("username, role")
+      .eq("id", user.id)
+      .single();
+    username = profile?.username ?? null;
+    isAdmin = profile?.role === "admin";
+  }
+
   return (
-    <html lang="es" className={`${geist.variable} antialiased`}>
-      <body className="min-h-dvh flex flex-col">
-        <Navbar />
-        <main className="flex-1 w-full max-w-5xl mx-auto px-4 py-8">
+    <html lang="es" className={spaceGrotesk.variable}>
+      <body className="min-h-screen flex flex-col">
+        <Navbar user={username} isAdmin={isAdmin} />
+        <main className="flex-1 w-full mx-auto max-w-[1024px] px-4 md:px-6 py-6 md:py-8">
           {children}
         </main>
-        <footer className="border-t border-[var(--color-border)] py-6 text-center text-sm text-[var(--color-muted)]">
-          Quiniela Mundial FIFA 2026 ⚽
-        </footer>
+        <Footer />
       </body>
     </html>
   );
