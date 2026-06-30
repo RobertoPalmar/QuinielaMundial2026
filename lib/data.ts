@@ -31,6 +31,9 @@ export type RankRow = {
   x: number; // exactos
   t: number; // total
   you?: boolean;
+  // Cambio de posición respecto al último snapshot del ranking.
+  // > 0 = subió, < 0 = bajó, 0 = sin cambio, null/undefined = sin datos previos (nuevo).
+  delta?: number | null;
 };
 
 export type ApiStatus = "FINISHED" | "TIMED" | "IN_PLAY";

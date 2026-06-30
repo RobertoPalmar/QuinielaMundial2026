@@ -2,6 +2,40 @@ import type { RankRow } from "@/lib/data";
 
 const medal = (pos: number) => (pos === 1 ? "🥇" : pos === 2 ? "🥈" : pos === 3 ? "🥉" : String(pos));
 
+/**
+ * Indicador de cambio de posición respecto al último snapshot del ranking.
+ *  delta > 0  -> subió (verde, ▲)
+ *  delta < 0  -> bajó  (rojo, ▼)
+ *  delta === 0 -> sin cambio (em-dash gris)
+ *  delta null/undefined -> sin datos previos -> "Nuevo"
+ */
+function DeltaTag({ delta }: { delta?: number | null }) {
+  if (delta == null) {
+    return (
+      <span className="inline-flex items-center text-[11px] font-medium text-muted" aria-label="Sin posición previa">
+        Nuevo
+      </span>
+    );
+  }
+  if (delta === 0) {
+    return (
+      <span className="inline-flex items-center text-xs font-semibold text-muted" aria-label="Sin cambio de posición">
+        —
+      </span>
+    );
+  }
+  const up = delta > 0;
+  return (
+    <span
+      className={`inline-flex items-center gap-0.5 text-xs font-bold tabular-nums ${up ? "text-good" : "text-bad"}`}
+      aria-label={up ? `Subió ${delta} posiciones` : `Bajó ${Math.abs(delta)} posiciones`}
+    >
+      <span aria-hidden="true">{up ? "▲" : "▼"}</span>
+      {Math.abs(delta)}
+    </span>
+  );
+}
+
 /** Estilos por posición del podio */
 const PODIUM = {
   1: { medal: "🥇", ring: "ring-[#facc15]", bar: "h-[120px] sm:h-[150px]", avatar: "w-[72px] h-[72px] text-2xl", glow: "shadow-[0_8px_30px_rgba(250,204,21,0.35)]", label: "1º", circle: "bg-[#facc15]", barColor: "bg-gradient-to-b from-[#facc15]/25 to-[#facc15]/5 border-[#facc15]/50" },
@@ -26,6 +60,9 @@ function PodiumSpot({ row }: { row: RankRow }) {
         </span>
         <span className="font-display font-bold text-xl sm:text-2xl text-primary leading-tight">{row.t}</span>
         <span className="text-[11px] text-muted">pts</span>
+        <span className="mt-0.5 leading-none">
+          <DeltaTag delta={row.delta} />
+        </span>
       </div>
       <div
         className={`w-full rounded-t-xl ${s.barColor} border-t-2 ${s.bar} grid place-items-start justify-center pt-2`}
@@ -61,7 +98,7 @@ function Podium({ rows }: { rows: RankRow[] }) {
  *  - móvil: tarjetas apiladas
  */
 export default function Ranking({ rows }: { rows: RankRow[] }) {
-  const cols = "grid-cols-[64px_minmax(0,1fr)_90px_90px_90px]";
+  const cols = "grid-cols-[64px_minmax(0,1fr)_72px_80px_80px_72px]";
 
   return (
     <>
@@ -76,11 +113,12 @@ export default function Ranking({ rows }: { rows: RankRow[] }) {
           <span className="text-center">Acertados</span>
           <span className="text-center">Exactos</span>
           <span className="text-right">Total</span>
+          <span className="text-right">Cambio</span>
         </div>
         {rows.map((r, i) => (
           <div
             key={r.name}
-            className={`grid ${cols} items-center px-[18px] py-3 ${i < rows.length - 1 ? "border-b border-border" : ""} ${r.you ? "bg-surface-2" : ""}`}
+            className={`grid ${cols} items-center px-[18px] py-3 ${i < rows.length - 1 ? "border-b border-border" : ""} ${r.you ? "bg-primary/10 ring-1 ring-inset ring-primary/30" : ""}`}
           >
             <span className="font-display font-bold text-base">{medal(r.pos)}</span>
             <span className="flex items-center gap-2.5 font-semibold text-[15px]">
@@ -93,6 +131,9 @@ export default function Ranking({ rows }: { rows: RankRow[] }) {
             <span className="text-center text-sm text-muted">{r.a}</span>
             <span className="text-center text-sm text-muted">{r.x}</span>
             <span className="text-right font-display font-bold text-lg text-primary">{r.t}</span>
+            <span className="text-right">
+              <DeltaTag delta={r.delta} />
+            </span>
           </div>
         ))}
       </div>
@@ -102,7 +143,7 @@ export default function Ranking({ rows }: { rows: RankRow[] }) {
         {rows.map((r) => (
           <div
             key={r.name}
-            className={`bg-surface rounded-[14px] p-4 border ${r.you ? "border-primary" : "border-border"}`}
+            className={`rounded-[14px] p-4 border ${r.you ? "bg-primary/10 border-primary" : "bg-surface border-border"}`}
           >
             <div className="flex items-center gap-3">
               <span className="font-display font-bold text-lg min-w-[34px]">{medal(r.pos)}</span>
@@ -113,7 +154,12 @@ export default function Ranking({ rows }: { rows: RankRow[] }) {
                 {r.name}
                 {r.you && <span className="text-muted font-medium"> · tú</span>}
               </span>
-              <span className="font-display font-bold text-[22px] text-primary">{r.t}</span>
+              <span className="flex flex-col items-end leading-none">
+                <span className="font-display font-bold text-[22px] text-primary">{r.t}</span>
+                <span className="mt-0.5">
+                  <DeltaTag delta={r.delta} />
+                </span>
+              </span>
             </div>
             <div className="flex gap-4 mt-3 pt-3 border-t border-border text-xs text-muted">
               <span>Acertados <b className="text-text">{r.a}</b></span>

@@ -37,17 +37,33 @@ export default function Navbar({
 
         {/* Links desktop */}
         <nav className="hidden md:flex items-center gap-1">
-          {links.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              className={`px-3 py-2 rounded-[9px] text-sm font-semibold transition ${
-                active(l.href) ? "bg-surface-2 text-text" : "text-muted hover:text-text"
-              }`}
-            >
-              {l.label}
-            </Link>
-          ))}
+          {links.map((l) =>
+            l.adminOnly ? (
+              <Link
+                key={l.href}
+                href={l.href}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-[9px] text-sm font-semibold border border-warn/40 transition-colors duration-150 ${
+                  active(l.href)
+                    ? "bg-warn/20 text-warn"
+                    : "bg-warn/10 text-warn hover:bg-warn/20"
+                }`}
+              >
+                <ShieldIcon /> {l.label}
+              </Link>
+            ) : (
+              <Link
+                key={l.href}
+                href={l.href}
+                className={`px-3 py-2 rounded-[9px] text-sm font-semibold transition-colors duration-150 ${
+                  active(l.href)
+                    ? "bg-surface-2 text-text"
+                    : "text-muted hover:bg-surface-2 hover:text-primary"
+                }`}
+              >
+                {l.label}
+              </Link>
+            )
+          )}
         </nav>
 
         {/* Sesión desktop */}
@@ -64,7 +80,7 @@ export default function Navbar({
                 <button
                   title="Salir"
                   aria-label="Salir"
-                  className="grid place-items-center w-[38px] h-[38px] rounded-[10px] border border-border text-muted hover:text-text hover:bg-surface-2 transition"
+                  className="grid place-items-center w-[38px] h-[38px] rounded-[10px] border border-border text-muted transition-colors duration-150 hover:border-bad/40 hover:bg-bad/10 hover:text-bad"
                 >
                   <LogoutIcon />
                 </button>
@@ -91,30 +107,47 @@ export default function Navbar({
       {/* Menú móvil */}
       {open && (
         <nav className="md:hidden flex flex-col gap-1 px-3 pb-3.5 border-t border-border">
-          {links.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              onClick={() => setOpen(false)}
-              className={`px-3.5 py-3 rounded-[10px] text-[15px] font-semibold ${
-                active(l.href) ? "bg-surface-2 text-text" : "text-muted"
-              }`}
-            >
-              {l.label}
-            </Link>
-          ))}
+          {links.map((l) =>
+            l.adminOnly ? (
+              <Link
+                key={l.href}
+                href={l.href}
+                onClick={() => setOpen(false)}
+                className={`flex items-center gap-1.5 px-3.5 py-3 rounded-[10px] text-[15px] font-semibold border border-warn/40 transition-colors duration-150 ${
+                  active(l.href)
+                    ? "bg-warn/20 text-warn"
+                    : "bg-warn/10 text-warn hover:bg-warn/20"
+                }`}
+              >
+                <ShieldIcon /> {l.label}
+              </Link>
+            ) : (
+              <Link
+                key={l.href}
+                href={l.href}
+                onClick={() => setOpen(false)}
+                className={`px-3.5 py-3 rounded-[10px] text-[15px] font-semibold transition-colors duration-150 ${
+                  active(l.href)
+                    ? "bg-surface-2 text-text"
+                    : "text-muted hover:bg-surface-2 hover:text-primary"
+                }`}
+              >
+                {l.label}
+              </Link>
+            )
+          )}
           <div className="flex items-center justify-between mt-1.5 pt-2.5 border-t border-border">
             <span className="text-sm font-medium text-muted">Sesión: {user ?? "—"}</span>
             {user ? (
               <form action="/auth/signout" method="post">
-                <button className="flex items-center gap-1.5 px-3.5 py-2 rounded-[9px] border border-border text-muted text-sm font-semibold">
+                <button className="flex items-center gap-1.5 px-3.5 py-2 rounded-[9px] border border-border text-muted text-sm font-semibold transition-colors duration-150 hover:border-bad/40 hover:bg-bad/10 hover:text-bad">
                   <LogoutIcon /> Salir
                 </button>
               </form>
             ) : (
               <Link
                 href="/login"
-                className="px-3.5 py-2 rounded-[9px] border border-border text-primary text-sm font-semibold"
+                className="px-3.5 py-2 rounded-[9px] border border-border text-primary text-sm font-semibold transition-colors duration-150 hover:border-primary/40 hover:bg-surface-2"
               >
                 Ingresar
               </Link>
@@ -123,6 +156,18 @@ export default function Navbar({
         </nav>
       )}
     </header>
+  );
+}
+
+function ShieldIcon() {
+  return (
+    <svg
+      width="15" height="15" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden
+    >
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      <path d="M9 12l2 2 4-4" />
+    </svg>
   );
 }
 

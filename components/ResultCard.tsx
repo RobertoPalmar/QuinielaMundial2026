@@ -16,7 +16,7 @@ const apiClass: Record<string, string> = {
 
 function fmtSync(iso: string | null): string {
   if (!iso) return "nunca";
-  return new Date(iso).toLocaleString("es-MX", { dateStyle: "short", timeStyle: "short" });
+  return new Date(iso).toLocaleString("es-MX", { timeZone: "America/Caracas", dateStyle: "short", timeStyle: "short" });
 }
 
 /** Result card (admin): marcador editable (viene de API) + aprobar/revertir. */

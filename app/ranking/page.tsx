@@ -33,15 +33,41 @@ export default async function RankingPage() {
     .order("exact_hits", { ascending: false })
     .order("username", { ascending: true });
 
+  // Último lote de snapshot (filas con el max snapshot_at) para el cambio de
+  // posición. Tomamos el snapshot_at más reciente y luego sus filas.
+  const prevPosByUser = new Map<string, number>();
+  const { data: latestSnap } = await supabase
+    .from("ranking_snapshots")
+    .select("snapshot_at")
+    .order("snapshot_at", { ascending: false })
+    .limit(1);
+  const latestSnapshotAt = latestSnap?.[0]?.snapshot_at as string | undefined;
+  if (latestSnapshotAt) {
+    const { data: snapRows } = await supabase
+      .from("ranking_snapshots")
+      .select("user_id,position")
+      .eq("snapshot_at", latestSnapshotAt);
+    for (const s of snapRows ?? []) {
+      if (s.user_id) prevPosByUser.set(s.user_id as string, s.position as number);
+    }
+  }
+
   const scores = (data ?? []) as UserScore[];
-  const rows: RankRow[] = scores.map((s, i) => ({
-    pos: i + 1,
-    name: s.username,
-    a: s.hits,
-    x: s.exact_hits,
-    t: s.total_points,
-    you: myProfileId != null && myProfileId === s.user_id,
-  }));
+  const rows: RankRow[] = scores.map((s, i) => {
+    const pos = i + 1;
+    const prev = prevPosByUser.get(s.user_id);
+    // delta > 0 = subió (mejoró), < 0 = bajó. prev - actual.
+    const delta = prev != null ? prev - pos : null;
+    return {
+      pos,
+      name: s.username,
+      a: s.hits,
+      x: s.exact_hits,
+      t: s.total_points,
+      you: myProfileId != null && myProfileId === s.user_id,
+      delta,
+    };
+  });
 
   return (
     <div className="flex flex-col gap-5">

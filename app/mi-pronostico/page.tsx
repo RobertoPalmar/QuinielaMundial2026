@@ -19,6 +19,7 @@ function nowMs(): number {
 function fmtKickoff(dt: string | null): string {
   if (!dt) return "Por definir";
   return new Date(dt).toLocaleString("es-MX", {
+    timeZone: "America/Caracas",
     weekday: "short",
     day: "numeric",
     month: "short",
@@ -30,6 +31,7 @@ function fmtKickoff(dt: string | null): string {
 function fmtDeadline(dt: string | null): string {
   if (!dt) return "Por definir";
   return new Date(dt).toLocaleString("es-MX", {
+    timeZone: "America/Caracas",
     dateStyle: "medium",
     timeStyle: "short",
   });

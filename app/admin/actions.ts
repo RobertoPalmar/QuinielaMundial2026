@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { syncMatches } from "@/lib/sync-matches";
+import { snapshotRanking } from "@/lib/ranking-snapshot";
 
 export type AdminState = { error?: string; message?: string };
 
@@ -53,6 +54,10 @@ export async function approveResult(
     // grupos lo deja en NULL). Sin ambos, no tocamos el winner sincronizado.
     if (hasHome && hasAway) patch.winner = winner ? winner : null;
 
+    // Snapshot de las standings ANTES de aplicar este resultado, para poder
+    // mostrar el cambio de posición (↑/↓) en el ranking.
+    await snapshotRanking();
+
     const { error } = await admin
       .from("matches")
       .update(patch)
@@ -75,6 +80,8 @@ export async function unapproveResult(
     await requireAdmin();
     const matchId = Number(formData.get("match_id"));
     const admin = createAdminClient();
+    // Snapshot ANTES de revertir: revertir también cambia las standings.
+    await snapshotRanking();
     const { error } = await admin
       .from("matches")
       .update({ is_approved: false, approved_at: null })
