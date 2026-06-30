@@ -26,6 +26,7 @@ export type Match = {
 
 export type RankRow = {
   pos: number;
+  userId: string; // profiles.id (= v_user_scores.user_id) del participante
   name: string;
   a: number; // acertados (partidos con resultado correcto, incluye exactos)
   x: number; // exactos

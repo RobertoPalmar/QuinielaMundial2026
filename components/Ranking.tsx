@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { RankRow } from "@/lib/data";
 
 const medal = (pos: number) => (pos === 1 ? "🥇" : pos === 2 ? "🥈" : pos === 3 ? "🥉" : String(pos));
@@ -46,7 +47,11 @@ const PODIUM = {
 function PodiumSpot({ row }: { row: RankRow }) {
   const s = PODIUM[row.pos as 1 | 2 | 3];
   return (
-    <div className="flex flex-1 flex-col items-center justify-end gap-2">
+    <Link
+      href={`/pronosticos/${row.userId}`}
+      className="flex flex-1 flex-col items-center justify-end gap-2 rounded-xl transition-opacity hover:opacity-80"
+      aria-label={`Ver pronósticos de ${row.name}`}
+    >
       <div className="text-2xl sm:text-3xl leading-none">{s.medal}</div>
       <div
         className={`grid place-items-center rounded-full font-display font-bold text-text ring-4 ${s.circle} ${s.ring} ${s.avatar} ${s.glow}`}
@@ -69,7 +74,7 @@ function PodiumSpot({ row }: { row: RankRow }) {
       >
         <span className="font-display font-bold text-lg sm:text-xl text-text/70">{s.label}</span>
       </div>
-    </div>
+    </Link>
   );
 }
 
@@ -116,9 +121,10 @@ export default function Ranking({ rows }: { rows: RankRow[] }) {
           <span className="text-right">Cambio</span>
         </div>
         {rows.map((r, i) => (
-          <div
+          <Link
             key={r.name}
-            className={`grid ${cols} items-center px-[18px] py-3 ${i < rows.length - 1 ? "border-b border-border" : ""} ${r.you ? "bg-primary/10 ring-1 ring-inset ring-primary/30" : ""}`}
+            href={`/pronosticos/${r.userId}`}
+            className={`grid ${cols} items-center px-[18px] py-3 transition-colors hover:bg-surface-2 ${i < rows.length - 1 ? "border-b border-border" : ""} ${r.you ? "bg-primary/10 ring-1 ring-inset ring-primary/30" : ""}`}
           >
             <span className="font-display font-bold text-base">{medal(r.pos)}</span>
             <span className="flex items-center gap-2.5 font-semibold text-[15px]">
@@ -134,16 +140,17 @@ export default function Ranking({ rows }: { rows: RankRow[] }) {
             <span className="text-right">
               <DeltaTag delta={r.delta} />
             </span>
-          </div>
+          </Link>
         ))}
       </div>
 
       {/* MÓVIL: tarjetas */}
       <div className="md:hidden flex flex-col gap-2.5">
         {rows.map((r) => (
-          <div
+          <Link
             key={r.name}
-            className={`rounded-[14px] p-4 border ${r.you ? "bg-primary/10 border-primary" : "bg-surface border-border"}`}
+            href={`/pronosticos/${r.userId}`}
+            className={`block rounded-[14px] p-4 border transition-colors active:opacity-80 ${r.you ? "bg-primary/10 border-primary" : "bg-surface border-border"}`}
           >
             <div className="flex items-center gap-3">
               <span className="font-display font-bold text-lg min-w-[34px]">{medal(r.pos)}</span>
@@ -166,7 +173,7 @@ export default function Ranking({ rows }: { rows: RankRow[] }) {
               <span>Exactos <b className="text-text">{r.x}</b></span>
               <span>Total <b className="text-text">{r.t}</b></span>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </>

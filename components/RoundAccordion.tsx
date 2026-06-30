@@ -28,6 +28,12 @@ export type RoundSection = {
   points: (number | null)[];
   /** Total de la ronda; null si todavía no hay resultados aprobados. */
   total: number | null;
+  /**
+   * Mensaje a mostrar EN LUGAR de los partidos (p.ej. pronósticos de otro
+   * usuario ocultos hasta que cierre la ronda). Si está presente, el cuerpo
+   * del acordeón muestra este texto y no renderiza tarjetas ni formulario.
+   */
+  placeholder?: string;
 };
 
 export default function RoundAccordion({ rounds }: { rounds: RoundSection[] }) {
@@ -100,7 +106,11 @@ function Accordion({ round }: { round: RoundSection }) {
 
       {open && (
         <div id={bodyId} className="px-4 pb-4 border-t border-border pt-4">
-          {round.active ? (
+          {round.placeholder ? (
+            <p className="text-[13px] font-medium text-muted text-center py-6">
+              🔒 {round.placeholder}
+            </p>
+          ) : round.active ? (
             <PredictionForm matches={round.matches} locked={round.locked} slug={round.slug} />
           ) : (
             <div className="flex flex-col gap-3">

@@ -60,6 +60,7 @@ export default async function RankingPage() {
     const delta = prev != null ? prev - pos : null;
     return {
       pos,
+      userId: s.user_id,
       name: s.username,
       a: s.hits,
       x: s.exact_hits,
