@@ -28,6 +28,7 @@ interface FdMatch {
     winner: "HOME_TEAM" | "AWAY_TEAM" | "DRAW" | null;
     duration: string;
     fullTime: { home: number | null; away: number | null };
+    penalties?: { home: number | null; away: number | null };
   };
 }
 
@@ -69,13 +70,21 @@ export function mapFixture(m: FdMatch): MappedFixture {
     if (m.score.winner === "HOME_TEAM") winner = m.homeTeam.name;
     else if (m.score.winner === "AWAY_TEAM") winner = m.awayTeam.name;
   }
+  // football-data.org: score.fullTime es el acumulado e INCLUYE los penales.
+  // Guardamos el marcador ANTES de penales (fin de prórroga) restando la tanda,
+  // porque el puntaje se calcula por marcador y los penales no cuentan.
+  const pen = m.score.penalties;
+  const ftHome = m.score.fullTime.home;
+  const ftAway = m.score.fullTime.away;
+  const home_score = ftHome == null ? null : ftHome - (pen?.home ?? 0);
+  const away_score = ftAway == null ? null : ftAway - (pen?.away ?? 0);
   return {
     api_fixture_id: m.id,
     home_team: m.homeTeam.name ?? "Por definir",
     away_team: m.awayTeam.name ?? "Por definir",
     kickoff_at: m.utcDate,
-    home_score: m.score.fullTime.home,
-    away_score: m.score.fullTime.away,
+    home_score,
+    away_score,
     winner,
     api_status: m.status,
     round_name: m.stage,
