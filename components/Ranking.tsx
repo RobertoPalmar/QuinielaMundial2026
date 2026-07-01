@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { RankRow } from "@/lib/data";
+import { Avatar } from "@/components/Avatar";
 
 const medal = (pos: number) => (pos === 1 ? "🥇" : pos === 2 ? "🥈" : pos === 3 ? "🥉" : String(pos));
 
@@ -54,9 +55,9 @@ function PodiumSpot({ row }: { row: RankRow }) {
     >
       <div className="text-2xl sm:text-3xl leading-none">{s.medal}</div>
       <div
-        className={`grid place-items-center rounded-full font-display font-bold text-text ring-4 ${s.circle} ${s.ring} ${s.avatar} ${s.glow}`}
+        className={`grid place-items-center overflow-hidden rounded-full ring-4 ${s.circle} ${s.ring} ${s.avatar} ${s.glow}`}
       >
-        {row.name[0].toUpperCase()}
+        <Avatar seed={row.userId} size={72} className="w-full h-full" />
       </div>
       <div className="flex flex-col items-center text-center">
         <span className="font-semibold text-sm sm:text-[15px] leading-tight text-center whitespace-normal wrap-break-word">
@@ -78,7 +79,7 @@ function PodiumSpot({ row }: { row: RankRow }) {
   );
 }
 
-function Podium({ rows }: { rows: RankRow[] }) {
+export function Podium({ rows }: { rows: RankRow[] }) {
   const top3 = rows.slice(0, 3);
   if (top3.length === 0) return null;
 
@@ -128,9 +129,7 @@ export default function Ranking({ rows }: { rows: RankRow[] }) {
           >
             <span className="font-display font-bold text-base">{medal(r.pos)}</span>
             <span className="flex items-center gap-2.5 font-semibold text-[15px]">
-              <span className="grid place-items-center w-[30px] h-[30px] rounded-full bg-surface-2 font-display font-bold text-xs text-muted">
-                {r.name[0].toUpperCase()}
-              </span>
+              <Avatar seed={r.userId} size={30} />
               {r.name}
               {r.you && <span className="text-muted font-medium"> · tú</span>}
             </span>
@@ -154,9 +153,7 @@ export default function Ranking({ rows }: { rows: RankRow[] }) {
           >
             <div className="flex items-center gap-3">
               <span className="font-display font-bold text-lg min-w-[34px]">{medal(r.pos)}</span>
-              <span className="grid place-items-center w-[34px] h-[34px] rounded-full bg-surface-2 font-display font-bold text-[13px] text-muted">
-                {r.name[0].toUpperCase()}
-              </span>
+              <Avatar seed={r.userId} size={34} />
               <span className="flex-1 font-semibold text-base">
                 {r.name}
                 {r.you && <span className="text-muted font-medium"> · tú</span>}

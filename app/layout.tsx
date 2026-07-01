@@ -30,21 +30,23 @@ export default async function RootLayout({
   } = await supabase.auth.getUser();
 
   let username: string | null = null;
+  let profileId: string | null = null;
   let isAdmin = false;
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("username, role")
+      .select("id, username, role")
       .eq("auth_user_id", user.id)
       .single();
     username = profile?.username ?? null;
+    profileId = profile?.id ?? null;
     isAdmin = profile?.role === "admin";
   }
 
   return (
     <html lang="es" className={spaceGrotesk.variable}>
       <body className="min-h-screen flex flex-col">
-        <Navbar user={username} isAdmin={isAdmin} />
+        <Navbar user={username} userId={profileId} isAdmin={isAdmin} />
         <main className="flex-1 w-full mx-auto max-w-[1024px] px-4 md:px-6 py-6 md:py-8">
           {children}
         </main>

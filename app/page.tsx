@@ -1,4 +1,8 @@
 import Link from "next/link";
+import { Podium } from "@/components/Ranking";
+import { createClient } from "@/lib/supabase/server";
+import type { RankRow } from "@/lib/data";
+import type { UserScore } from "@/lib/types";
 
 const SCORING = [
   { n: "3", t: "Marcador exacto", d: "Aciertas el resultado exacto del partido. Ej: 2-1." },
@@ -6,7 +10,27 @@ const SCORING = [
   { n: "⏱", t: "Cierre por ronda", d: "Cada ronda cierra en su fecha límite. Después no se edita." },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("v_user_scores")
+    .select("*")
+    .order("total_points", { ascending: false })
+    .order("exact_hits", { ascending: false })
+    .order("username", { ascending: true })
+    .limit(3);
+
+  const podiumRows: RankRow[] = ((data ?? []) as UserScore[]).map((s, i) => ({
+    pos: i + 1,
+    userId: s.user_id,
+    name: s.username,
+    a: s.hits,
+    x: s.exact_hits,
+    t: s.total_points,
+    you: false,
+    delta: null,
+  }));
+
   return (
     <div className="flex flex-col gap-8">
       {/* HERO */}
@@ -29,6 +53,19 @@ export default function HomePage() {
           <Link href="/reglas" className="btn btn-ghost min-h-[48px]">Reglas</Link>
         </div>
       </section>
+
+      {/* PODIO */}
+      {podiumRows.length > 0 && (
+        <section>
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <h2 className="font-display font-bold text-[clamp(20px,4vw,26px)] tracking-tight">Podio</h2>
+            <Link href="/ranking" className="text-[13px] font-medium text-primary hover:underline">
+              Ver ranking completo →
+            </Link>
+          </div>
+          <Podium rows={podiumRows} />
+        </section>
+      )}
 
       {/* SCORING */}
       <section className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">

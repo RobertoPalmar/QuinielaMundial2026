@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { Avatar } from "@/components/Avatar";
 
 const LINKS = [
   { href: "/ranking", label: "Ranking" },
@@ -13,9 +14,11 @@ const LINKS = [
 
 export default function Navbar({
   user = null,
+  userId = null,
   isAdmin = false,
 }: {
   user?: string | null;
+  userId?: string | null;
   isAdmin?: boolean;
 }) {
   const pathname = usePathname();
@@ -71,9 +74,7 @@ export default function Navbar({
           {user ? (
             <>
               <span className="flex items-center gap-2 text-sm font-medium text-muted">
-                <span className="grid place-items-center w-7 h-7 rounded-full text-on-primary font-display font-bold text-xs bg-gradient-to-br from-primary to-primary-dark">
-                  {user[0]?.toUpperCase()}
-                </span>
+                <Avatar seed={userId ?? user} size={28} />
                 <span className="text-text">{user}</span>
               </span>
               <form action="/auth/signout" method="post">
