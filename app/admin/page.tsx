@@ -27,11 +27,10 @@ export default async function AdminDashboardPage() {
         </div>
       </div>
 
-      <div className="grid gap-3.5 sm:grid-cols-3">
+      <div className="grid gap-3.5 sm:grid-cols-2">
         {[
           { href: "/admin/resultados", icon: "📊", t: "Resultados", d: "Sincroniza, edita y aprueba marcadores." },
           { href: "/admin/rondas", icon: "🗓", t: "Rondas", d: "Abre/cierra rondas y define deadlines y puntos." },
-          { href: "/admin/import", icon: "📥", t: "Importar grupos", d: "Pega puntos de fase de grupos desde Excel." },
         ].map((a) => (
           <Link key={a.href} href={a.href} className="card p-[22px] flex flex-col gap-2 hover:bg-surface-2 transition">
             <span className="text-2xl" aria-hidden>{a.icon}</span>
